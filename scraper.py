@@ -1,17 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
-import lxml
 
 
 def novita_parse():
     url = 'http://novita-nsk.ru/shop/zhenskie-platja-optom/'
     r = requests.get(url)
-    with open('temp.html', 'w', encoding='utf-8') as output_file:
-        output_file.write(r.text)
-
-    with open('temp.html', 'r', encoding='utf-8') as fp:
-        soup = BeautifulSoup(fp, 'lxml')
-
+    soup = BeautifulSoup(r.text, 'lxml')
     items_link_list = soup.find_all('div', {'class': 'name'})
     for link in items_link_list:
         url = link.find('a').get('href')
