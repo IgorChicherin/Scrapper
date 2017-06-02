@@ -13,16 +13,17 @@ def novita_parse():
         soup = BeautifulSoup(fp, 'lxml')
 
     items_link_list = soup.find_all('div', {'class': 'name'})
-    # for link in items_link_list:
-    url = items_link_list[0].find('a').get('href')
-    r =requests.get(url)
-    soup = BeautifulSoup(r.text.encode('utf-8'), 'lxml')
-    name = soup.h1.string
-    # print(url)
-    print(name)
-    # color = soup.find_all('td', {'class': 'col-color'})
-    # color = color[1].string
-    # with open('res.txt', 'w', encoding='utf-8') as result_file:
-    #     result_file.write('Название: {} Цвет: {}'.format(name, color))
+    for link in items_link_list:
+        url = link.find('a').get('href')
+        r = requests.get(url)
+        soup = BeautifulSoup(r.text.encode('utf-8'), 'lxml')
+        name = soup.h1.text.strip()
+        color = soup.find_all('td', {'class': 'col-color'})
+        color = color[1].text.strip()
+        sizes_list = soup.find_all('td', {'class': 'inv'})
+        sizes_list = [size.text.strip() for size in sizes_list]
+        with open('res.txt', 'a', encoding='utf-8') as result_file:
+            result_file.write('Название: {} Цвет: {} Размеры: {} \n'.format(name, color, sizes_list))
+
 
 novita_parse()
