@@ -1,7 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
 import os
+import re
 
+# http://primalinea.ru с авторизацие цены Х2
+# http://avigal.ru/ c авторизацией цены Х2
+# https://wisell.ru/
 
 def create_sizes_dict(color_list, sizes_list, sizes_accepted):
     i = 0
@@ -40,16 +44,40 @@ def novita_parse(url):
             for item in range(len(value)):
                 if value[item] == 'disabled':
                     data['color_size'][key].pop(color_size_tags[key].index(value[item]))
-        print('Название: {} Цвет\Размер: {} Цена: {} \n'.format(data['name'], data['color_size'], data['price']))
-        with open('res.txt', 'a+', encoding='utf-8') as result_file:
+        # print('Название: {} Цвет\Размер: {} Цена: {} \n'.format(data['name'], data['color_size'], data['price']))
+        with open('novita.txt', 'a+', encoding='utf-8') as result_file:
             result_file.write(
                 'Название: {} Цвет\Размер: {}  Цена: {}\n'.format(data['name'], data['color_size'], data['price']))
 
 
+def parse_primalinea(url):
+    session = requests.Session()
+    payload = {'login_name': 'mail@big-moda.com'}
+    r = session.post('http://primalinea.ru/customers/login', payload)
+    r = session.get(url)
+    soup = BeautifulSoup(r.text, 'lxml')
+    items_link_list = soup.find_all('a', {'class': 'catalog-item-link'})
+    items_link_list = [item.get('href') for item in items_link_list]
+    for link in items_link_list:
+        r = session.get(link)
+        soup = BeautifulSoup(r.text.encode('utf-8'), 'lxml')
+        data = {}
+        data['name'] = soup.h1.text.strip()
+        price = soup.find('div', attrs={'id':'catalog-item-description'})
+        data['price'] = price.p.text
+        data['sizes_list'] = soup.find_all('option')
+        data['sizes_list'] = [item.text for item in data['sizes_list']]
+        with open('primalinea.txt', 'a+', encoding='utf-8') as result_file:
+            result_file.write(
+                'Название: {} Размер: {}  Цена: {}\n'.format(data['name'], data['sizes_list'], data['price']))
+
+
 if __name__ == '__main__':
-    try:
-        os.remove('res.txt')
-    except FileNotFoundError:
-        pass
+    files = ['novita.txt', 'primalinea.txt']
+    for file in files:
+        if os.path.exists(file):
+            os.remove(file)
     novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
     novita_parse('http://novita-nsk.ru/shop/bluzy/')
+    parse_primalinea('http://primalinea.ru/catalog/category/42/all/0')
+    parse_primalinea('http://primalinea.ru/catalog/category/43/all/0')
