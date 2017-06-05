@@ -51,7 +51,7 @@ def novita_parse(url):
                 'Название: {} Цвет\Размер: {}  Цена: {}\n'.format(data['name'], data['color_size'], data['price']))
 
 
-def parse_primalinea(url):
+def primalinea_parse(url):
     session = requests.Session()
     payload = {'login_name': 'mail@big-moda.com'}
     r = session.post('http://primalinea.ru/customers/login', payload)
@@ -74,24 +74,31 @@ def parse_primalinea(url):
                 'Название: {} Размер: {}  Цена: {}\n'.format(data['name'], data['sizes_list'], data['price']))
 
 
+def avigal_parse(url):
+    session = requests.Session()
+    payload = {'email': 'Bigmoda.com@gmail.com', 'password': '010101'}
+    r = session.post('http://avigal.ru/login/', payload)
+    r = session.get('http://avigal.ru/dress/&p_val=[700:2422.5]&limit=100&sort=p.date_added&order=DESC&page=1')
+    # page_now = re.search(r'(?<=page=)(\d+)', 'http://avigal.ru/dress/&p_val=[700:2422.5]&limit=100&sort=p.date_added&order=DESC&page=1').group(0)
+    soup = BeautifulSoup(r.text, 'lxml')
+    pagination = soup.find_all('div', {'class': 'pagination'})
+    pagination = pagination[0].find_all('li')
+    pagination_url = []
+    for page in pagination:
+        try:
+            link = page.a.text
+        except AttributeError:
+            continue
+        if page.a.get('href') not in pagination_url:
+            pagination_url.append(page.a.get('href'))
+
+
 if __name__ == '__main__':
     files = ['novita.txt', 'primalinea.txt']
     for file in files:
         if os.path.exists(file):
             os.remove(file)
-    # novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
-    # novita_parse('http://novita-nsk.ru/shop/bluzy/')
-    # parse_primalinea('http://primalinea.ru/catalog/category/42/all/0')
-    # parse_primalinea('http://primalinea.ru/catalog/category/43/all/0')
-    session = requests.Session()
-    payload = {'email': 'Bigmoda.com@gmail.com', 'password': '010101'}
-    r = session.post('http://avigal.ru/login/', payload)
-    r = session.get('http://avigal.ru/dress/&p_val=[700:2422.5]&limit=100&sort=p.date_added&order=DESC&page=1')
-    soup = BeautifulSoup(r.text, 'lxml')
-    pagination = soup.find_all('ul', {'class': 'pagination'})
-
-    # pagination = [page.li.a.get('href') for page in pagination
-    #               if page.li.text.strip() != '&gt;' or page.li.text.strip() != '&gt; |'
-    #               or page.li['class'] != ['active']]
-    print(pagination)
-    # print(pagination)
+            # novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
+            # novita_parse('http://novita-nsk.ru/shop/bluzy/')
+            # primalinea_parse('http://primalinea.ru/catalog/category/42/all/0')
+            # primalinea_parse('http://primalinea.ru/catalog/category/43/all/0')
