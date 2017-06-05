@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import os
 import re
 
+
 # http://primalinea.ru с авторизацие цены Х2
 # http://avigal.ru/ c авторизацией цены Х2
 # https://wisell.ru/
@@ -63,8 +64,9 @@ def parse_primalinea(url):
         soup = BeautifulSoup(r.text.encode('utf-8'), 'lxml')
         data = {}
         data['name'] = soup.h1.text.strip()
-        price = soup.find('div', attrs={'id':'catalog-item-description'})
-        data['price'] = price.p.text
+        price = soup.find('div', attrs={'id': 'catalog-item-description'})
+        price = re.search(r'(\d+)', price.p.text.strip().replace(' ', ''))
+        data['price'] = int(price.group(0)) * 2
         data['sizes_list'] = soup.find_all('option')
         data['sizes_list'] = [item.text for item in data['sizes_list']]
         with open('primalinea.txt', 'a+', encoding='utf-8') as result_file:
@@ -77,7 +79,19 @@ if __name__ == '__main__':
     for file in files:
         if os.path.exists(file):
             os.remove(file)
-    novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
-    novita_parse('http://novita-nsk.ru/shop/bluzy/')
-    parse_primalinea('http://primalinea.ru/catalog/category/42/all/0')
-    parse_primalinea('http://primalinea.ru/catalog/category/43/all/0')
+    # novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
+    # novita_parse('http://novita-nsk.ru/shop/bluzy/')
+    # parse_primalinea('http://primalinea.ru/catalog/category/42/all/0')
+    # parse_primalinea('http://primalinea.ru/catalog/category/43/all/0')
+    session = requests.Session()
+    payload = {'email': 'Bigmoda.com@gmail.com', 'password': '010101'}
+    r = session.post('http://avigal.ru/login/', payload)
+    r = session.get('http://avigal.ru/dress/&p_val=[700:2422.5]&limit=100&sort=p.date_added&order=DESC&page=1')
+    soup = BeautifulSoup(r.text, 'lxml')
+    pagination = soup.find_all('ul', {'class': 'pagination'})
+
+    # pagination = [page.li.a.get('href') for page in pagination
+    #               if page.li.text.strip() != '&gt;' or page.li.text.strip() != '&gt; |'
+    #               or page.li['class'] != ['active']]
+    print(pagination)
+    # print(pagination)
