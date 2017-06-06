@@ -78,27 +78,50 @@ def avigal_parse(url):
     session = requests.Session()
     payload = {'email': 'Bigmoda.com@gmail.com', 'password': '010101'}
     r = session.post('http://avigal.ru/login/', payload)
-    r = session.get('http://avigal.ru/dress/&p_val=[700:2422.5]&limit=100&sort=p.date_added&order=DESC&page=1')
+    r = session.get(url)
     # page_now = re.search(r'(?<=page=)(\d+)', 'http://avigal.ru/dress/&p_val=[700:2422.5]&limit=100&sort=p.date_added&order=DESC&page=1').group(0)
     soup = BeautifulSoup(r.text, 'lxml')
-    pagination = soup.find_all('div', {'class': 'pagination'})
-    pagination = pagination[0].find_all('li')
-    pagination_url = []
-    for page in pagination:
+    data = {}
+    data['paginaton'] = soup.find_all('div', {'class': 'pagination'})
+    data['paginaton'] = data['paginaton'][0].find_all('li')
+    data['paginaton_url'] = []
+    items_link_list = []
+    for page in data['paginaton']:
         try:
             link = page.a.text
         except AttributeError:
             continue
-        if page.a.get('href') not in pagination_url:
-            pagination_url.append(page.a.get('href'))
+        if page.a.get('href') not in data['paginaton_url']:
+            data['paginaton_url'].append(page.a.get('href'))
+    for link in data['paginaton_url']:
+        items_link_list = soup.find_all('a', {'class': 'hover-image'})
+        items_link_list = [item.get('href') for item in items_link_list]
+        for link in items_link_list:
+        # link = 'http://avigal.ru/index.php?route=product/product&path=63&product_id=2103'
+            r = session.get(link)
+            soup = BeautifulSoup(r.text, 'lxml')
+            data['price'] = soup.find('span', attrs={'class': 'micro-price', 'itemprop': 'price'})
+            data['price'] = re.search(r'(\d+)',  data['price'].text.strip().replace(' ', ''))
+            data['price'] = int(data['price'].group(0)) * 2
+            data['name'] = soup.find('span', attrs={'itemprop': 'model'})
+            data['name'] = data['name'].text
+            sizes_list = soup.find_all('label', {'class': 'optid-13'})
+            data['sizes_list'] = []
+            for item in sizes_list:
+                if r':n\a' not in item['title']:
+                    data['sizes_list'].append(item.text.strip())
+            with open('avigal.txt', 'a+', encoding='utf-8') as result_file:
+                result_file.write(
+                    'Название: {} Размер: {}  Цена: {}\n'.format(data['name'], data['sizes_list'], data['price']))
 
 
 if __name__ == '__main__':
-    files = ['novita.txt', 'primalinea.txt']
+    files = ['novita.txt', 'primalinea.txt', 'avigal.txt']
     for file in files:
         if os.path.exists(file):
             os.remove(file)
-            # novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
-            # novita_parse('http://novita-nsk.ru/shop/bluzy/')
-            # primalinea_parse('http://primalinea.ru/catalog/category/42/all/0')
-            # primalinea_parse('http://primalinea.ru/catalog/category/43/all/0')
+    # novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
+    # novita_parse('http://novita-nsk.ru/shop/bluzy/')
+    # primalinea_parse('http://primalinea.ru/catalog/category/42/all/0')
+    # primalinea_parse('http://primalinea.ru/catalog/category/43/all/0')
+    avigal_parse('http://avigal.ru/dress/&p_val=[700:2422.5]&limit=100&sort=p.date_added&order=DESC&page=1')
