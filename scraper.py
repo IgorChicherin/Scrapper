@@ -5,7 +5,7 @@ import re
 
 
 # http://primalinea.ru с авторизацие цены Х2
-# http://avigal.ru/ c авторизацией цены Х2
+# http://avigal.ru/ c авторизацией цены Х2 не меньше 2500
 # https://wisell.ru/
 
 def create_sizes_dict(color_list, sizes_list, sizes_accepted):
@@ -103,16 +103,17 @@ def avigal_parse(url):
             data['price'] = soup.find('span', attrs={'class': 'micro-price', 'itemprop': 'price'})
             data['price'] = re.search(r'(\d+)',  data['price'].text.strip().replace(' ', ''))
             data['price'] = int(data['price'].group(0)) * 2
-            data['name'] = soup.find('span', attrs={'itemprop': 'model'})
-            data['name'] = data['name'].text
-            sizes_list = soup.find_all('label', {'class': 'optid-13'})
-            data['sizes_list'] = []
-            for item in sizes_list:
-                if r':n\a' not in item['title']:
-                    data['sizes_list'].append(item.text.strip())
-            with open('avigal.txt', 'a+', encoding='utf-8') as result_file:
-                result_file.write(
-                    'Название: {} Размер: {}  Цена: {}\n'.format(data['name'], data['sizes_list'], data['price']))
+            if data['price'] > 2500:
+                data['name'] = soup.find('span', attrs={'itemprop': 'model'})
+                data['name'] = data['name'].text
+                sizes_list = soup.find_all('label', {'class': 'optid-13'})
+                data['sizes_list'] = []
+                for item in sizes_list:
+                    if r':n\a' not in item['title']:
+                        data['sizes_list'].append(item.text.strip())
+                with open('avigal.txt', 'a+', encoding='utf-8') as result_file:
+                    result_file.write(
+                        'Название: {} Размер: {}  Цена: {}\n'.format(data['name'], data['sizes_list'], data['price']))
 
 
 if __name__ == '__main__':
@@ -124,4 +125,5 @@ if __name__ == '__main__':
     # novita_parse('http://novita-nsk.ru/shop/bluzy/')
     # primalinea_parse('http://primalinea.ru/catalog/category/42/all/0')
     # primalinea_parse('http://primalinea.ru/catalog/category/43/all/0')
-    avigal_parse('http://avigal.ru/dress/&p_val=[700:2422.5]&limit=100&sort=p.date_added&order=DESC&page=1')
+    avigal_parse('http://avigal.ru/dress/')
+    avigal_parse('http://avigal.ru/blouse-tunic/')
