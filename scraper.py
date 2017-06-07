@@ -1,8 +1,7 @@
 import requests
-from bs4 import BeautifulSoup
 import os
 import re
-
+from bs4 import BeautifulSoup
 
 # http://primalinea.ru с авторизацие цены Х2
 # http://avigal.ru/ c авторизацией цены Х2 не меньше 2500
@@ -97,11 +96,11 @@ def avigal_parse(url):
         items_link_list = soup.find_all('a', {'class': 'hover-image'})
         items_link_list = [item.get('href') for item in items_link_list]
         for link in items_link_list:
-        # link = 'http://avigal.ru/index.php?route=product/product&path=63&product_id=2103'
+            # link = 'http://avigal.ru/index.php?route=product/product&path=63&product_id=2103'
             r = session.get(link)
             soup = BeautifulSoup(r.text, 'lxml')
             data['price'] = soup.find('span', attrs={'class': 'micro-price', 'itemprop': 'price'})
-            data['price'] = re.search(r'(\d+)',  data['price'].text.strip().replace(' ', ''))
+            data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
             data['price'] = int(data['price'].group(0)) * 2
             if data['price'] > 2500:
                 data['name'] = soup.find('span', attrs={'itemprop': 'model'})
@@ -116,6 +115,41 @@ def avigal_parse(url):
                         'Название: {} Размер: {}  Цена: {}\n'.format(data['name'], data['sizes_list'], data['price']))
 
 
+def wisell_parse(url):
+    r = requests.get(url)
+    soup = BeautifulSoup(r.text, 'lxml')
+    data = {}
+    data['paginaton'] = soup.find_all('div', {'class': 'page_navi'})
+    pagination_links = data['paginaton'][0].find_all('a', {'class': 'menu_link'})
+    data['paginaton'] = [item.get('href') for item in pagination_links]
+    data['paginaton_url'] = [url]
+    for link in data['paginaton']:
+        if 'https://wisell.ru' + link not in data['paginaton_url']:
+            data['paginaton_url'].append('https://wisell.ru' + link)
+    for page in data['paginaton_url']:
+        r = requests.get(page)
+        soup = BeautifulSoup(r.text, 'lxml')
+        data['item_links'] = soup.find_all('a', {'class': 'image_block'})
+        data['item_links'] = ['https://wisell.ru' + link.get('href') for link in data['item_links']]
+        data['item_links'].pop(0)
+        for item_link in data['item_links']:
+            r = requests.get(item_link)
+            soup = BeautifulSoup(r.text, 'lxml')
+            data['price'] = soup.find('span', attrs={'class': 'price_val'})
+            data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
+            data['price'] = int(data['price'].group(0))
+            if data['price'] < 1800:
+                continue
+            data['name'] = soup.find('li', attrs={'class': 'item_lost'})
+            data['name'] = data['name'].span.text
+            data['sizes_list'] = soup.find_all('ul', {'class': 'size_list'})
+            data['sizes_list'] = data['sizes_list'][0].find_all('li', {'class': 'check_item'})
+            data['sizes_list'] = [size.text.strip() for size in data['sizes_list']]
+            data['sizes_list'].pop(0)
+            data['sizes_list'].pop(-1)
+            print(data['name'], data['sizes_list'], data['price'])
+
+
 if __name__ == '__main__':
     files = ['novita.txt', 'primalinea.txt', 'avigal.txt']
     for file in files:
@@ -125,5 +159,7 @@ if __name__ == '__main__':
     # novita_parse('http://novita-nsk.ru/shop/bluzy/')
     # primalinea_parse('http://primalinea.ru/catalog/category/42/all/0')
     # primalinea_parse('http://primalinea.ru/catalog/category/43/all/0')
-    avigal_parse('http://avigal.ru/dress/')
-    avigal_parse('http://avigal.ru/blouse-tunic/')
+    # avigal_parse('http://avigal.ru/dress/')
+    # avigal_parse('http://avigal.ru/blouse-tunic/')
+    # wisell_parse('https://wisell.ru/catalog/platya/')
+    # wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')
