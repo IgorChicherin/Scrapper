@@ -1,7 +1,9 @@
 import requests
 import os
 import re
+import csv
 from bs4 import BeautifulSoup
+
 
 # http://primalinea.ru с авторизацие цены Х2
 # http://avigal.ru/ c авторизацией цены Х2 не меньше 2500
@@ -44,10 +46,10 @@ def novita_parse(url):
             for item in range(len(value)):
                 if value[item] == 'disabled':
                     data['color_size'][key].pop(color_size_tags[key].index(value[item]))
-        # print('Название: {} Цвет\Размер: {} Цена: {} \n'.format(data['name'], data['color_size'], data['price']))
-        with open('novita.txt', 'a+', encoding='utf-8') as result_file:
+        print(data['name'], data['color_size'], data['price'])
+        with open('temp.csv', 'a+', encoding='utf-8') as result_file:
             result_file.write(
-                'Название: {} Цвет\Размер: {}  Цена: {}\n'.format(data['name'], data['color_size'], data['price']))
+                'novita;{};{};{};\n'.format(data['name'], data['color_size'], data['price']))
 
 
 def primalinea_parse(url):
@@ -68,9 +70,10 @@ def primalinea_parse(url):
         data['price'] = int(price.group(0)) * 2
         data['sizes_list'] = soup.find_all('option')
         data['sizes_list'] = [item.text for item in data['sizes_list']]
-        with open('primalinea.txt', 'a+', encoding='utf-8') as result_file:
+        print(data['name'], data['sizes_list'], data['price'])
+        with open('temp.csv', 'a+', encoding='utf-8') as result_file:
             result_file.write(
-                'Название: {} Размер: {}  Цена: {}\n'.format(data['name'], data['sizes_list'], data['price']))
+                'primalinea;{};{};{};\n'.format(data['name'], data['sizes_list'], data['price']))
 
 
 def avigal_parse(url):
@@ -110,10 +113,10 @@ def avigal_parse(url):
                 for item in sizes_list:
                     if r':n\a' not in item['title']:
                         data['sizes_list'].append(item.text.strip())
-                with open('avigal.txt', 'a+', encoding='utf-8') as result_file:
+                print(data['name'], data['sizes_list'], data['price'])
+                with open('temp.csv', 'a+', encoding='utf-8') as result_file:
                     result_file.write(
-                        'Название: {} Размер: {}  Цена: {}\n'.format(data['name'], data['sizes_list'], data['price']))
-
+                        'avigal;{};{};{};\n'.format(data['name'], data['sizes_list'], data['price']))
 
 def wisell_parse(url):
     r = requests.get(url)
@@ -148,18 +151,21 @@ def wisell_parse(url):
             data['sizes_list'].pop(0)
             data['sizes_list'].pop(-1)
             print(data['name'], data['sizes_list'], data['price'])
+            with open('temp.csv', 'a+', encoding='utf-8') as result_file:
+                result_file.write(
+                    'wisell;{};{};{};\n'.format(data['name'], data['sizes_list'], data['price']))
 
 
 if __name__ == '__main__':
-    files = ['novita.txt', 'primalinea.txt', 'avigal.txt']
+    files = ['temp.csv']
     for file in files:
         if os.path.exists(file):
             os.remove(file)
-    # novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
-    # novita_parse('http://novita-nsk.ru/shop/bluzy/')
-    # primalinea_parse('http://primalinea.ru/catalog/category/42/all/0')
-    # primalinea_parse('http://primalinea.ru/catalog/category/43/all/0')
-    # avigal_parse('http://avigal.ru/dress/')
-    # avigal_parse('http://avigal.ru/blouse-tunic/')
-    # wisell_parse('https://wisell.ru/catalog/platya/')
-    # wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')
+    novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
+    novita_parse('http://novita-nsk.ru/shop/bluzy/')
+    primalinea_parse('http://primalinea.ru/catalog/category/42/all/0')
+    primalinea_parse('http://primalinea.ru/catalog/category/43/all/0')
+    avigal_parse('http://avigal.ru/dress/')
+    avigal_parse('http://avigal.ru/blouse-tunic/')
+    wisell_parse('https://wisell.ru/catalog/platya/')
+    wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')
