@@ -200,7 +200,14 @@ def bimoda_parse(url):
         for item in data['item_links']:
             r = requests.get(item)
             soup = BeautifulSoup(r.text, 'lxml')
-            data['name'] =
+            data['name'] = soup.find('h1', {'class': 'product_title'}).text
+            data['price'] = soup.find('meta', {'itemprop': 'price'})
+            data['price'] = data['price']['content']
+            data['sizes_list'] = soup.find('div', {'class': 'entry-summary'})
+            data['sizes_list'] = soup.find_all('span', {'class': 'ivpa_term'})
+            data['sizes_list'] = [item.text.strip() for item in data['sizes_list']]
+            print(data['name'], data['price'], data['sizes_list'])
+
 
 if __name__ == '__main__':
     # TODO нужен файл корректировок название платья | убрать размер | добавить размер
