@@ -10,6 +10,13 @@ from bs4 import BeautifulSoup
 # https://wisell.ru/
 
 def create_sizes_dict(color_list, sizes_list, sizes_accepted):
+    '''
+    Create dict of color and sizes of item
+    :param color_list: list
+    :param sizes_list: list
+    :param sizes_accepted: list
+    :return: dict
+    '''
     i = 0
     temp_dict = {}
     for color in color_list:
@@ -23,6 +30,12 @@ def create_sizes_dict(color_list, sizes_list, sizes_accepted):
 
 
 def novita_parse(url):
+    # TODO подогнать названия платьев под Bigmoda
+    '''
+    Parsing Novita Site
+    :param url: str
+    :return: tuple
+    '''
     r = requests.get(url)
     soup = BeautifulSoup(r.text, 'lxml')
     items_link_list = soup.find_all('div', {'class': 'name'})
@@ -31,7 +44,7 @@ def novita_parse(url):
         r = requests.get(url)
         soup = BeautifulSoup(r.text.encode('utf-8'), 'lxml')
         data = {}
-        data['name'] = soup.h1.text.strip()
+        data['name'] = re.search(r'(?<=Платье -  )(№\d+)', soup.h1.text.strip()).group(0)
         colors = soup.find_all('td', {'class': 'col-color'})
         data['color_list'] = [color.text.strip() for color in colors if color.text.strip() != 'Цвет/размер']
         data['sizes_list'] = soup.find_all('td', {'class': 'inv'})
@@ -40,7 +53,8 @@ def novita_parse(url):
         data['sizes_accepted'] = soup.find_all('td', {'class': 'tdforselect'})
         data['sizes_accepted'] = ['disabled' if 'disabled' in size_accepted['class'] else 'enabled' for size_accepted in
                                   data['sizes_accepted']]
-        data['price'] = soup.find('div', {'class': 'value'}).text
+        data['price'] = soup.find('div', {'class': 'value'}).text.replace(',', '').split('.')
+        data['price'] = data['price'][0]
         color_size_tags = create_sizes_dict(data['color_list'], data['sizes_list'], data['sizes_accepted'])
         for key, value in color_size_tags.items():
             for item in range(len(value)):
@@ -51,9 +65,13 @@ def novita_parse(url):
             yield data['name'], data['color_size'][key], data['price']
 
 
-
-
 def primalinea_parse(url):
+    # TODO подогнать названия платьев под Bigmoda
+    '''
+    Parsing Primalinea Site
+    :param url: str
+    :return: tuple
+    '''
     session = requests.Session()
     payload = {'login_name': 'mail@big-moda.com'}
     r = session.post('http://primalinea.ru/customers/login', payload)
@@ -72,10 +90,17 @@ def primalinea_parse(url):
         data['price'] = int(price.group(0)) * 2
         data['sizes_list'] = soup.find_all('option')
         data['sizes_list'] = [item.text for item in data['sizes_list']]
-        # print(data['name'], data['sizes_list'], data['price'])
+        print(data['name'], data['sizes_list'], data['price'])
         yield data['name'], data['sizes_list'], data['price']
 
+
 def avigal_parse(url):
+    # TODO подогнать названия платьев под Bigmoda
+    '''
+    Parsing Avigal Site
+    :param url: str
+    :return: tuple
+    '''
     session = requests.Session()
     payload = {'email': 'Bigmoda.com@gmail.com', 'password': '010101'}
     r = session.post('http://avigal.ru/login/', payload)
@@ -115,7 +140,14 @@ def avigal_parse(url):
                 print(data['name'], data['sizes_list'], data['price'])
                 yield data['name'], data['sizes_list'], data['price']
 
+
 def wisell_parse(url):
+    # TODO подогнать названия платьев под Bigmoda
+    '''
+    Parsing Wisell Site
+    :param url: str
+    :return: tuple
+    '''
     r = requests.get(url)
     soup = BeautifulSoup(r.text, 'lxml')
     data = {}
@@ -151,11 +183,31 @@ def wisell_parse(url):
             yield data['name'], data['sizes_list'], data['price']
 
 
+def bimoda_parse(url):
+    r = requests.get(url)
+    soup = BeautifulSoup(r.text, 'lxml')
+    data = {}
+    data['paginaton_url'] = soup.find_all('a', {'class': 'page-numbers'})
+    data['paginaton_url'] = [link.get('href') for link in data['paginaton_url'] if link.text != '→']
+    last_page = int(re.search(r'(?<=page/)(\d+)', data['paginaton_url'].pop(-1)).group(0))
+    pagination_link = 'https://big-moda.com/product-category/platya-bolshih-razmerov/page/'
+    data['paginaton_url'] = [pagination_link + str(link) for link in range(2, last_page + 1)]
+    for page in data['paginaton_url']:
+        r = requests.get(page)
+        soup = BeautifulSoup(r.text, 'lxml')
+        data['item_links'] = soup.find_all('a', {'class': 'woocommerce-LoopProduct-link'})
+        data['item_links'] = [item.get('href') for item in data['item_links']]
+        for item in data['item_links']:
+            r = requests.get(item)
+            soup = BeautifulSoup(r.text, 'lxml')
+            data['name'] =
+
 if __name__ == '__main__':
-    files = ['temp.csv']
-    for file in files:
-        if os.path.exists(file):
-            os.remove(file)
+    # TODO нужен файл корректировок название платья | убрать размер | добавить размер
+    # files = ['temp.csv']
+    # for file in files:
+    #     if os.path.exists(file):
+    #         os.remove(file)
     # novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
     # novita_parse('http://novita-nsk.ru/shop/bluzy/')
     # for item in primalinea_parse('http://primalinea.ru/catalog/category/42/all/0'):
@@ -165,3 +217,4 @@ if __name__ == '__main__':
     # avigal_parse('http://avigal.ru/blouse-tunic/')
     # wisell_parse('https://wisell.ru/catalog/platya/')
     # wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')
+    bimoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/')
