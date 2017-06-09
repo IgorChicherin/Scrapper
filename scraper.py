@@ -93,7 +93,7 @@ def primalinea_parse(url):
 
 
 def avigal_parse(url):
-    # TODO подогнать названия платьев под Bigmoda
+    #TODO подогнать названия платьев под Bigmoda
     '''
     Parsing Avigal Site
     :param url: str
@@ -141,7 +141,7 @@ def avigal_parse(url):
 
 
 def wisell_parse(url):
-    # TODO подогнать названия платьев под Bigmoda
+    #TODO подогнать названия платьев под Bigmoda
     '''
     Parsing Wisell Site
     :param url: str
@@ -220,7 +220,7 @@ def bigmoda_parse(url):
 
 
 if __name__ == '__main__':
-    # TODO нужен файл корректировок название платья | убрать размер | добавить размер
+    #TODO нужен файл корректировок название платья | убрать размер | добавить размер
     # files = ['temp.csv']
     # for file in files:
     #     if os.path.exists(file):
