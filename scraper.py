@@ -223,20 +223,23 @@ def bigmoda_parse(url):
     return result
 
 
+
+
+
 if __name__ == '__main__':
 # TODO нужен файл корректировок название платья | убрать размер | добавить размер
 # files = ['temp.csv']
 # for file in files:
 #     if os.path.exists(file):
 #         os.remove(file)
-# novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
-# print(novita_parse('http://novita-nsk.ru/shop/bluzy/'))
-# for item in primalinea_parse('http://primalinea.ru/catalog/category/42/all/0'):
-#     print(item)
-# primalinea_parse('http://primalinea.ru/catalog/category/43/all/0')
-# avigal_parse('http://avigal.ru/dress/')
-# avigal_parse('http://avigal.ru/blouse-tunic/')
-# wisell_parse('https://wisell.ru/catalog/platya/')
-# wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')
-    bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/')
-    bigmoda_parse('https://big-moda.com/product-category/bluzki-bolshih-razmerov/')
+    novita_dress = novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
+    novita_blouse = novita_parse('http://novita-nsk.ru/shop/bluzy/')
+    primalinea_dress = primalinea_parse('http://primalinea.ru/catalog/category/42/all/0')
+    primalinea_blouse = primalinea_parse('http://primalinea.ru/catalog/category/43/all/0')
+    avigal_dress = avigal_parse('http://avigal.ru/dress/')
+    avigal_blouse = avigal_parse('http://avigal.ru/blouse-tunic/')
+    wisell_dress = wisell_parse('https://wisell.ru/catalog/platya/')
+    wisell_blouse = wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')
+    bigmoda_dress =  bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/')
+    bigmoda_blouse = bigmoda_parse('https://big-moda.com/product-category/bluzki-bolshih-razmerov/')
+    bigmoda_exc = bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')
