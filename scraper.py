@@ -5,10 +5,6 @@ import csv
 from bs4 import BeautifulSoup
 
 
-# http://primalinea.ru с авторизацие цены Х2
-# http://avigal.ru/ c авторизацией цены Х2 не меньше 2500
-# https://wisell.ru/
-
 def create_sizes_dict(color_list, sizes_list, sizes_accepted):
     '''
     Create dict of color and sizes of item
@@ -223,15 +219,12 @@ def bigmoda_parse(url):
     return result
 
 
-
-
-
 if __name__ == '__main__':
-# TODO нужен файл корректировок название платья | убрать размер | добавить размер
-# files = ['temp.csv']
-# for file in files:
-#     if os.path.exists(file):
-#         os.remove(file)
+    # TODO нужен файл корректировок название платья | убрать размер | добавить размер
+    # files = ['temp.csv']
+    # for file in files:
+    #     if os.path.exists(file):
+    #         os.remove(file)
     novita_dress = novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
     novita_blouse = novita_parse('http://novita-nsk.ru/shop/bluzy/')
     primalinea_dress = primalinea_parse('http://primalinea.ru/catalog/category/42/all/0')
@@ -240,6 +233,6 @@ if __name__ == '__main__':
     avigal_blouse = avigal_parse('http://avigal.ru/blouse-tunic/')
     wisell_dress = wisell_parse('https://wisell.ru/catalog/platya/')
     wisell_blouse = wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')
-    bigmoda_dress =  bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/')
+    bigmoda_dress = bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/')
     bigmoda_blouse = bigmoda_parse('https://big-moda.com/product-category/bluzki-bolshih-razmerov/')
     bigmoda_exc = bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')
