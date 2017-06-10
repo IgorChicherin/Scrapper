@@ -241,7 +241,6 @@ def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
                     if len(size_to_del) != 0:
                         with open('res.txt', 'a', encoding='utf-8') as file:
                             file.write('Удалить размеры: {}, {}, {}\n'.format(dress[0], size_to_del, dress[2]))
-        if bm_drs not in bigmoda_exc:
             if bm_drs not in parse_list:
                 with open('res.txt', 'a', encoding='utf-8') as file:
                     file.write('Удалить карточку: {}\n'.format(bm_drs[0]))
