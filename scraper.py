@@ -85,8 +85,8 @@ def primalinea_parse(url):
         data['price'] = int(price.group(0)) * 2
         data['sizes_list'] = soup.find_all('option')
         data['sizes_list'] = [item.text for item in data['sizes_list']]
-        print('Прима линия ' + data['name'], data['sizes_list'], data['price'])
-        result.append(['Прима ' + data['name'], data['sizes_list'], data['price']])
+        print('Прима ' + data['name'].lower(), data['sizes_list'], data['price'])
+        result.append(['Прима ' + data['name'].lower(), data['sizes_list'], data['price']])
     return result
 
 
@@ -94,7 +94,7 @@ def avigal_parse(url):
     '''
     Parsing Avigal Site
     :param url: str
-    :return: tuple
+    :return: list
     '''
     session = requests.Session()
     payload = {'email': 'Bigmoda.com@gmail.com', 'password': '010101'}
@@ -216,6 +216,13 @@ def bigmoda_parse(url):
 
 
 def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
+    '''
+    Compare avaliability supplier and site customer
+    :param parse_list: list
+    :param bigmoda_dresses: list
+    :param bigmoda_exc: list
+    :return: boolean
+    '''
     for dress in parse_list:
         if dress not in bigmoda_exc:
             for bm_drs in bigmoda_dresses:
@@ -237,7 +244,11 @@ def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
         if bm_drs not in bigmoda_exc:
             if bm_drs not in parse_list:
                 with open('res.txt', 'a', encoding='utf-8') as file:
-                    file.write('Удалить карточку: {}\n'.format(bm_drs[0], bm_drs))
+                    file.write('Удалить карточку: {}\n'.format(bm_drs[0]))
+            elif dress not in bigmoda_dresses:
+                with open('res.txt', 'a', encoding='utf-8') as file:
+                    file.write('Добавить карточку: {}, {}, {}\n'.format(dress[0], dress[1], dress[2]))
+    return True
 
 
 if __name__ == '__main__':
