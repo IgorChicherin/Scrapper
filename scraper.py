@@ -1,7 +1,6 @@
 import requests
 import os
 import re
-import csv
 from bs4 import BeautifulSoup
 
 
@@ -57,8 +56,8 @@ def novita_parse(url):
                 if value[item] == 'disabled':
                     data['color_size'][key].pop(color_size_tags[key].index(value[item]))
         for key in data['color_size']:
-            print([data['name'], str(key), data['color_size'][key], data['price']])
-            result.append([data['name'], str(key), data['color_size'][key], data['price']])
+            print(['Новита ' + data['name'] + ' ' + str(key), data['color_size'][key], data['price']])
+            result.append(['Новита ' + data['name'] + ' ' + str(key), data['color_size'][key], data['price']])
     return result
 
 
@@ -86,14 +85,12 @@ def primalinea_parse(url):
         data['price'] = int(price.group(0)) * 2
         data['sizes_list'] = soup.find_all('option')
         data['sizes_list'] = [item.text for item in data['sizes_list']]
-        print(data['name'], data['sizes_list'], data['price'])
-        # yield data['name'], data['sizes_list'], data['price']
+        print('Прима линия ' + data['name'], data['sizes_list'], data['price'])
         result.append(['Прима ' + data['name'], data['sizes_list'], data['price']])
     return result
 
 
 def avigal_parse(url):
-    #TODO подогнать названия платьев под Bigmoda
     '''
     Parsing Avigal Site
     :param url: str
@@ -135,13 +132,12 @@ def avigal_parse(url):
                 for item in sizes_list:
                     if r':n\a' not in item['title']:
                         data['sizes_list'].append(item.text.strip())
-                print(data['name'], data['sizes_list'], data['price'])
-                result.append([data['name'], data['sizes_list'], data['price']])
+                print('Авигаль ' + data['name'], data['sizes_list'], data['price'])
+                result.append(['Авигаль ' + data['name'], data['sizes_list'], data['price']])
     return result
 
 
 def wisell_parse(url):
-    #TODO подогнать названия платьев под Bigmoda
     '''
     Parsing Wisell Site
     :param url: str
@@ -179,8 +175,8 @@ def wisell_parse(url):
             data['sizes_list'] = [size.text.strip() for size in data['sizes_list']]
             data['sizes_list'].pop(0)
             data['sizes_list'].pop(-1)
-            print(data['name'], data['sizes_list'], data['price'])
-            result.append([data['name'], data['sizes_list'], data['price']])
+            print('Визель ' + data['name'], data['sizes_list'], data['price'])
+            result.append(['Визель ' + data['name'], data['sizes_list'], data['price']])
     return result
 
 
@@ -219,20 +215,53 @@ def bigmoda_parse(url):
     return result
 
 
+def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
+    for dress in parse_list:
+        if dress not in bigmoda_exc:
+            for bm_drs in bigmoda_dresses:
+                if dress[0] == bm_drs[0]:
+                    size_to_add = []
+                    for size in dress[1]:
+                        if size not in bm_drs[1]:
+                            size_to_add.append(size)
+                    if len(size_to_add) != 0:
+                        with open('res.txt', 'a', encoding='utf-8') as file:
+                            file.write('Добавить размеры: {}, {}, {}\n'.format(dress[0], size_to_add, dress[2]))
+                    size_to_del = []
+                    for size in bm_drs[1]:
+                        if size not in dress[1]:
+                            size_to_del.append(size)
+                    if len(size_to_del) != 0:
+                        with open('res.txt', 'a', encoding='utf-8') as file:
+                            file.write('Удалить размеры: {}, {}, {}\n'.format(dress[0], size_to_del, dress[2]))
+        if bm_drs not in bigmoda_exc:
+            if bm_drs not in parse_list:
+                with open('res.txt', 'a', encoding='utf-8') as file:
+                    file.write('Удалить карточку: {}\n'.format(bm_drs[0], bm_drs))
+
+
 if __name__ == '__main__':
-    #TODO нужен файл корректировок название платья | убрать размер | добавить размер
-    # files = ['temp.csv']
-    # for file in files:
-    #     if os.path.exists(file):
-    #         os.remove(file)
-    novita_dress = novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
+    # TODO нужен файл корректировок название платья | убрать размер | добавить размер
+    files = ['res.txt']
+    for file in files:
+        if os.path.exists(file):
+            os.remove(file)
+    novita_dresses = novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
+    primalinea_dresses = primalinea_parse('http://primalinea.ru/catalog/category/42/all/0')
+    avigal_dresses = avigal_parse('http://avigal.ru/dress/')
+    wisell_dresses = wisell_parse('https://wisell.ru/catalog/platya/')
+    bigmoda_dresses = bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/')
     novita_blouse = novita_parse('http://novita-nsk.ru/shop/bluzy/')
-    primalinea_dress = primalinea_parse('http://primalinea.ru/catalog/category/42/all/0')
     primalinea_blouse = primalinea_parse('http://primalinea.ru/catalog/category/43/all/0')
-    avigal_dress = avigal_parse('http://avigal.ru/dress/')
     avigal_blouse = avigal_parse('http://avigal.ru/blouse-tunic/')
-    wisell_dress = wisell_parse('https://wisell.ru/catalog/platya/')
     wisell_blouse = wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')
-    bigmoda_dress = bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/')
     bigmoda_blouse = bigmoda_parse('https://big-moda.com/product-category/bluzki-bolshih-razmerov/')
     bigmoda_exc = bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')
+    compare_dress(novita_dresses, bigmoda_dresses, bigmoda_exc)
+    compare_dress(primalinea_dresses, bigmoda_dresses, bigmoda_exc)
+    compare_dress(avigal_dresses, bigmoda_dresses, bigmoda_exc)
+    compare_dress(wisell_dresses, bigmoda_dresses, bigmoda_exc)
+    compare_dress(novita_blouse, bigmoda_dresses, bigmoda_exc)
+    compare_dress(primalinea_blouse, bigmoda_dresses, bigmoda_exc)
+    compare_dress(avigal_blouse, bigmoda_dresses, bigmoda_exc)
+    compare_dress(wisell_blouse, bigmoda_dresses, bigmoda_exc)
