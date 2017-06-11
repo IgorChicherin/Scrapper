@@ -6,14 +6,13 @@ base = None
 if sys.platform == 'win32':
     base = "Win32GUI"
 
-
 executables = [Executable("scraper.py", base=base)]
 
 packages = ['idna', 'lxml', 'multiprocessing']
 options = {
     'build_exe': {
 
-        'packages':packages,
+        'packages': packages,
     },
 
 }
@@ -27,6 +26,6 @@ setup(
     author='Igor Chicherin',
     author_email='',
     description='',
-    executables = executables,
-    options= options
+    executables=executables,
+    options=options
 )
