@@ -80,13 +80,15 @@ def primalinea_parse(url):
         soup = BeautifulSoup(r.text.encode('utf-8'), 'lxml')
         data = {}
         data['name'] = soup.h1.text.strip()
+        data['name'] = data['name'].split(' ')[2] if len(data['name'].split(' ')) > 2 and \
+                                                    'new' not in data['name'].split(' ') else data['name'].split(' ')[1]
         price = soup.find('div', attrs={'id': 'catalog-item-description'})
         price = re.search(r'(\d+)', price.p.text.strip().replace(' ', ''))
         data['price'] = int(price.group(0)) * 2
         data['sizes_list'] = soup.find_all('option')
         data['sizes_list'] = [item.text for item in data['sizes_list']]
         print('Прима ' + data['name'].lower(), data['sizes_list'], data['price'])
-        result.append(['Прима ' + data['name'].lower(), data['sizes_list'], data['price']])
+        result.append(['Прима ' + data['name'], data['sizes_list'], data['price']])
     return result
 
 
@@ -118,7 +120,6 @@ def avigal_parse(url):
         items_link_list = soup.find_all('a', {'class': 'hover-image'})
         items_link_list = [item.get('href') for item in items_link_list]
         for link in items_link_list:
-            # link = 'http://avigal.ru/index.php?route=product/product&path=63&product_id=2103'
             r = session.get(link)
             soup = BeautifulSoup(r.text, 'lxml')
             data['price'] = soup.find('span', attrs={'class': 'micro-price', 'itemprop': 'price'})
@@ -256,22 +257,22 @@ if __name__ == '__main__':
     for file in files:
         if os.path.exists(file):
             os.remove(file)
-    novita_dresses = novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
+    # novita_dresses = novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
     primalinea_dresses = primalinea_parse('http://primalinea.ru/catalog/category/42/all/0')
-    avigal_dresses = avigal_parse('http://avigal.ru/dress/')
-    wisell_dresses = wisell_parse('https://wisell.ru/catalog/platya/')
+    # avigal_dresses = avigal_parse('http://avigal.ru/dress/')
+    # wisell_dresses = wisell_parse('https://wisell.ru/catalog/platya/')
     bigmoda_dresses = bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/')
-    novita_blouse = novita_parse('http://novita-nsk.ru/shop/bluzy/')
+    # novita_blouse = novita_parse('http://novita-nsk.ru/shop/bluzy/')
     primalinea_blouse = primalinea_parse('http://primalinea.ru/catalog/category/43/all/0')
-    avigal_blouse = avigal_parse('http://avigal.ru/blouse-tunic/')
-    wisell_blouse = wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')
+    # avigal_blouse = avigal_parse('http://avigal.ru/blouse-tunic/')
+    # wisell_blouse = wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')
     bigmoda_blouse = bigmoda_parse('https://big-moda.com/product-category/bluzki-bolshih-razmerov/')
     bigmoda_exc = bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')
-    compare_dress(novita_dresses, bigmoda_dresses, bigmoda_exc)
+    # compare_dress(novita_dresses, bigmoda_dresses, bigmoda_exc)
     compare_dress(primalinea_dresses, bigmoda_dresses, bigmoda_exc)
-    compare_dress(avigal_dresses, bigmoda_dresses, bigmoda_exc)
-    compare_dress(wisell_dresses, bigmoda_dresses, bigmoda_exc)
-    compare_dress(novita_blouse, bigmoda_dresses, bigmoda_exc)
+    # compare_dress(avigal_dresses, bigmoda_dresses, bigmoda_exc)
+    # compare_dress(wisell_dresses, bigmoda_dresses, bigmoda_exc)
+    # compare_dress(novita_blouse, bigmoda_dresses, bigmoda_exc)
     compare_dress(primalinea_blouse, bigmoda_dresses, bigmoda_exc)
-    compare_dress(avigal_blouse, bigmoda_dresses, bigmoda_exc)
-    compare_dress(wisell_blouse, bigmoda_dresses, bigmoda_exc)
+    # compare_dress(avigal_blouse, bigmoda_dresses, bigmoda_exc)
+    # compare_dress(wisell_blouse, bigmoda_dresses, bigmoda_exc)
