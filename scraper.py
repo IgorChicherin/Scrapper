@@ -81,7 +81,8 @@ def primalinea_parse(url):
         data = {}
         data['name'] = soup.h1.text.strip()
         data['name'] = data['name'].split(' ')[2] if len(data['name'].split(' ')) > 2 and \
-                                                    'new' not in data['name'].split(' ') else data['name'].split(' ')[1]
+                                                     'new' not in data['name'].split(' ') else data['name'].split(' ')[
+            1]
         price = soup.find('div', attrs={'id': 'catalog-item-description'})
         price = re.search(r'(\d+)', price.p.text.strip().replace(' ', ''))
         data['price'] = int(price.group(0)) * 2
