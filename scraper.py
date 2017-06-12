@@ -2,7 +2,9 @@ import requests
 import os
 import re
 from bs4 import BeautifulSoup
-
+import time
+import sys
+from clint.textui import progress
 
 def create_sizes_dict(color_list, sizes_list, sizes_accepted):
     '''
@@ -34,6 +36,9 @@ def novita_parse(url):
     soup = BeautifulSoup(r.text, 'lxml')
     items_link_list = soup.find_all('div', {'class': 'name'})
     result = []
+    i = 0
+    l = len(items_link_list)
+    printProgressBar(i, l, prefix='Progress:', suffix='Complete', length=50)
     for link in items_link_list:
         url = link.find('a').get('href')
         r = requests.get(url)
@@ -56,8 +61,11 @@ def novita_parse(url):
                 if value[item] == 'disabled':
                     data['color_size'][key].pop(color_size_tags[key].index(value[item]))
         for key in data['color_size']:
-            print('Новита ' + data['name'] + ' ' + str(key), data['color_size'][key], data['price'])
+            # print('Новита ' + data['name'] + ' ' + str(key), data['color_size'][key], data['price'])
             result.append(['Новита ' + data['name'] + ' ' + str(key), data['color_size'][key], data['price']])
+        time.sleep(0.1)
+        i += 1
+        printProgressBar(i, l, prefix='Novita Parsing:', suffix='Complete', length=50)
     return result
 
 
@@ -75,21 +83,26 @@ def primalinea_parse(url):
     items_link_list = soup.find_all('a', {'class': 'catalog-item-link'})
     items_link_list = [item.get('href') for item in items_link_list]
     result = []
+    i = 0
+    l = len(items_link_list)
+    printProgressBar(i, l, prefix='Progress:', suffix='Complete', length=50)
     for link in items_link_list:
         r = session.get(link)
         soup = BeautifulSoup(r.text.encode('utf-8'), 'lxml')
         data = {}
         data['name'] = soup.h1.text.strip()
         data['name'] = data['name'].split(' ')[2] if len(data['name'].split(' ')) > 2 and \
-                                                     'new' not in data['name'].split(' ') else data['name'].split(' ')[
-            1]
+                                                'new' not in data['name'].split(' ') else data['name'].split(' ')[1]
         price = soup.find('div', attrs={'id': 'catalog-item-description'})
         price = re.search(r'(\d+)', price.p.text.strip().replace(' ', ''))
         data['price'] = int(price.group(0)) * 2
         data['sizes_list'] = soup.find_all('option')
         data['sizes_list'] = [item.text for item in data['sizes_list']]
-        print('Прима ' + data['name'].lower(), data['sizes_list'], data['price'])
+        # print('Прима ' + data['name'].lower(), data['sizes_list'], data['price'])
         result.append(['Прима ' + data['name'], data['sizes_list'], data['price']])
+        time.sleep(0.1)
+        i += 1
+        printProgressBar(i, l, prefix='Primalinea Parsing:', suffix='Complete', length=50)
     return result
 
 
@@ -109,6 +122,7 @@ def avigal_parse(url):
     data['paginaton'] = soup.find_all('div', {'class': 'pagination'})
     data['paginaton'] = data['paginaton'][0].find_all('li')
     data['paginaton_url'] = []
+    data['item_links'] = []
     items_link_list = []
     for page in data['paginaton']:
         try:
@@ -117,25 +131,31 @@ def avigal_parse(url):
             continue
         if page.a.get('href') not in data['paginaton_url']:
             data['paginaton_url'].append(page.a.get('href'))
-    for link in data['paginaton_url']:
-        items_link_list = soup.find_all('a', {'class': 'hover-image'})
-        items_link_list = [item.get('href') for item in items_link_list]
-        for link in items_link_list:
-            r = session.get(link)
-            soup = BeautifulSoup(r.text, 'lxml')
-            data['price'] = soup.find('span', attrs={'class': 'micro-price', 'itemprop': 'price'})
-            data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
-            data['price'] = int(data['price'].group(0)) * 2
-            if data['price'] > 2500:
-                data['name'] = soup.find('span', attrs={'itemprop': 'model'})
-                data['name'] = data['name'].text
-                sizes_list = soup.find_all('label', {'class': 'optid-13'})
-                data['sizes_list'] = []
-                for item in sizes_list:
-                    if r':n\a' not in item['title']:
-                        data['sizes_list'].append(item.text.strip())
-                print('Авигаль ' + data['name'], data['sizes_list'], data['price'])
-                result.append(['Авигаль ' + data['name'], data['sizes_list'], data['price']])
+        for link in data['paginaton_url']:
+            items_link_list = soup.find_all('a', {'class': 'hover-image'})
+            items_link_list = [item.get('href') for item in items_link_list]
+            i = 0
+            l = len(items_link_list)
+            printProgressBar(i, l, prefix='Progress:', suffix='Complete', length=50)
+            for link in items_link_list:
+                r = session.get(link)
+                soup = BeautifulSoup(r.text, 'lxml')
+                data['price'] = soup.find('span', attrs={'class': 'micro-price', 'itemprop': 'price'})
+                data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
+                data['price'] = int(data['price'].group(0)) * 2
+                if data['price'] > 2500:
+                    data['name'] = soup.find('span', attrs={'itemprop': 'model'})
+                    data['name'] = data['name'].text
+                    sizes_list = soup.find_all('label', {'class': 'optid-13'})
+                    data['sizes_list'] = []
+                    for item in sizes_list:
+                        if r':n\a' not in item['title']:
+                            data['sizes_list'].append(item.text.strip())
+                    # print('Авигаль ' + data['name'], data['sizes_list'], data['price'])
+                    result.append(['Авигаль ' + data['name'], data['sizes_list'], data['price']])
+                time.sleep(0.1)
+                i += 1
+                printProgressBar(i, l, prefix='Avigal Parsing:', suffix='Complete', length=50)
     return result
 
 
@@ -162,6 +182,9 @@ def wisell_parse(url):
         data['item_links'] = soup.find_all('a', {'class': 'image_block'})
         data['item_links'] = ['https://wisell.ru' + link.get('href') for link in data['item_links']]
         data['item_links'].pop(0)
+        i = 0
+        l = len(data['item_links'])
+        printProgressBar(i, l, prefix='Progress:', suffix='Complete', length=50)
         for item_link in data['item_links']:
             r = requests.get(item_link)
             soup = BeautifulSoup(r.text, 'lxml')
@@ -169,6 +192,8 @@ def wisell_parse(url):
             data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
             data['price'] = int(data['price'].group(0))
             if data['price'] < 1800:
+                i += 1
+                printProgressBar(i, l, prefix='Wisell Parsing:', suffix='Complete', length=50)
                 continue
             data['name'] = soup.find('li', attrs={'class': 'item_lost'})
             data['name'] = data['name'].span.text
@@ -177,8 +202,11 @@ def wisell_parse(url):
             data['sizes_list'] = [size.text.strip() for size in data['sizes_list']]
             data['sizes_list'].pop(0)
             data['sizes_list'].pop(-1)
-            print('Визель ' + data['name'], data['sizes_list'], data['price'])
+            # print('Визель ' + data['name'], data['sizes_list'], data['price'])
             result.append(['Визель ' + data['name'], data['sizes_list'], data['price']])
+            time.sleep(0.1)
+            i += 1
+            printProgressBar(i, l, prefix='Wisell Parsing:', suffix='Complete', length=50)
     return result
 
 
@@ -203,6 +231,9 @@ def bigmoda_parse(url):
         soup = BeautifulSoup(r.text, 'lxml')
         data['item_links'] = soup.find_all('a', {'class': 'woocommerce-LoopProduct-link'})
         data['item_links'] = [item.get('href') for item in data['item_links']]
+        i = 0
+        l = len(data['item_links'])
+        printProgressBar(i, l, prefix='Progress:', suffix='Complete', length=50)
         for item in data['item_links']:
             r = requests.get(item)
             soup = BeautifulSoup(r.text, 'lxml')
@@ -212,8 +243,11 @@ def bigmoda_parse(url):
             data['sizes_list'] = soup.find('div', {'class': 'ivpa_attribute'}, {'class': 'ivpa_text'})
             data['sizes_list'] = data['sizes_list'].find_all('span', {'class': 'ivpa_term'})
             data['sizes_list'] = [item.text.strip() for item in data['sizes_list']]
-            print(data['name'], data['sizes_list'], data['price'])
+            # print(data['name'], data['sizes_list'], data['price'])
             result.append([data['name'], data['sizes_list'], data['price']])
+            time.sleep(0.1)
+            i += 1
+            printProgressBar(i, l, prefix='Bigmoda Parsing:', suffix='Complete', length=50)
     return result
 
 
@@ -256,6 +290,36 @@ def del_item(goods_data):
             with open('res.txt', 'a', encoding='utf-8') as file:
                 file.write('Удалить карточку: {}\n'.format(dress[0]))
     return goods_data
+
+
+def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█'):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        length      - Optional  : character length of bar (Int)
+        fill        - Optional  : bar fill character (Str)
+    """
+    try:
+        percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+        filledLength = int(length * iteration // total)
+        bar = fill * filledLength + '-' * (length - filledLength)
+        sys.stdout.write('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix))
+        # print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end='\r')
+        sys.stdout.flush()
+    except ZeroDivisionError:
+        pass
+
+
+    # Print New Line on Complete
+    if iteration == total:
+        os.system('cls')
+
+
 
 
 if __name__ == '__main__':

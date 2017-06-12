@@ -6,9 +6,9 @@ base = None
 if sys.platform == 'win32':
     base = "Win32GUI"
 
-executables = [Executable("scraper.py", base=base)]
+executables = [Executable("scraper.py", base='Win32GUI')]
 
-packages = ['idna', 'lxml', 'multiprocessing']
+packages = ['idna', 'lxml', 'multiprocessing', 'time', 'sys']
 options = {
     'build_exe': {
 
@@ -19,7 +19,7 @@ options = {
 
 setup(
     name='Scrapper',
-    version='',
+    version='1.0',
     packages=[''],
     url='',
     license='',
