@@ -4,7 +4,6 @@ import re
 from bs4 import BeautifulSoup
 import time
 import sys
-from clint.textui import progress
 
 def create_sizes_dict(color_list, sizes_list, sizes_accepted):
     '''
@@ -176,6 +175,7 @@ def wisell_parse(url):
     for link in data['paginaton']:
         if 'https://wisell.ru' + link not in data['paginaton_url']:
             data['paginaton_url'].append('https://wisell.ru' + link)
+    j = 0
     for page in data['paginaton_url']:
         r = requests.get(page)
         soup = BeautifulSoup(r.text, 'lxml')
@@ -184,7 +184,7 @@ def wisell_parse(url):
         data['item_links'].pop(0)
         i = 0
         l = len(data['item_links'])
-        printProgressBar(i, l, prefix='Progress:', suffix='Complete', length=50)
+        printProgressBar(i, l, prefix='Progress:', suffix='[{} of {}]Complete '.format(j,len(data['paginaton_url'])-1), length=50)
         for item_link in data['item_links']:
             r = requests.get(item_link)
             soup = BeautifulSoup(r.text, 'lxml')
@@ -206,7 +206,8 @@ def wisell_parse(url):
             result.append(['Визель ' + data['name'], data['sizes_list'], data['price']])
             time.sleep(0.1)
             i += 1
-            printProgressBar(i, l, prefix='Wisell Parsing:', suffix='Complete', length=50)
+            printProgressBar(i, l, prefix='Wisell Parsing:', suffix='[{} of {}]Complete '.format(j,len(data['paginaton_url'])-1), length=50)
+        j +=1
     return result
 
 
