@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import time
 import sys
 
+
 def create_sizes_dict(color_list, sizes_list, sizes_accepted):
     '''
     Create dict of color and sizes of item
@@ -91,7 +92,8 @@ def primalinea_parse(url):
         data = {}
         data['name'] = soup.h1.text.strip()
         data['name'] = data['name'].split(' ')[2] if len(data['name'].split(' ')) > 2 and \
-                                                'new' not in data['name'].split(' ') else data['name'].split(' ')[1]
+                                                     'new' not in data['name'].split(' ') else data['name'].split(' ')[
+            1]
         price = soup.find('div', attrs={'id': 'catalog-item-description'})
         price = re.search(r'(\d+)', price.p.text.strip().replace(' ', ''))
         data['price'] = int(price.group(0)) * 2
@@ -167,7 +169,7 @@ def wisell_parse(url):
     r = requests.get(url)
     soup = BeautifulSoup(r.text, 'lxml')
     data = {}
-    result = []
+    temp = []
     data['paginaton'] = soup.find_all('div', {'class': 'page_navi'})
     pagination_links = data['paginaton'][0].find_all('a', {'class': 'menu_link'})
     data['paginaton'] = [item.get('href') for item in pagination_links]
@@ -184,7 +186,8 @@ def wisell_parse(url):
         data['item_links'].pop(0)
         i = 0
         l = len(data['item_links'])
-        printProgressBar(i, l, prefix='Progress:', suffix='[{} of {}]Complete '.format(j,len(data['paginaton_url'])-1), length=50)
+        printProgressBar(i, l, prefix='Progress:',
+                         suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
         for item_link in data['item_links']:
             r = requests.get(item_link)
             soup = BeautifulSoup(r.text, 'lxml')
@@ -202,12 +205,32 @@ def wisell_parse(url):
             data['sizes_list'] = [size.text.strip() for size in data['sizes_list']]
             data['sizes_list'].pop(0)
             data['sizes_list'].pop(-1)
-            # print('Визель ' + data['name'], data['sizes_list'], data['price'])
-            result.append(['Визель ' + data['name'], data['sizes_list'], data['price']])
+            # print(data['name'], data['sizes_list'], data['price'])
+            temp.append([data['name'], data['sizes_list'], data['price']])
             time.sleep(0.1)
             i += 1
-            printProgressBar(i, l, prefix='Wisell Parsing:', suffix='[{} of {}]Complete '.format(j,len(data['paginaton_url'])-1), length=50)
-        j +=1
+            printProgressBar(i, l, prefix='Wisell Parsing:',
+                             suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
+        j += 1
+        result = []
+        for dress in temp:
+            if '/' in dress[0]:
+                article = dress[0].split('/')
+                for item in temp:
+                    if int(article[1]) % 2 != 0:
+                        if article[0] + '/' + (str(int(article[1]) - 1)) in item[0]:
+                            for dr_size in item[1]:
+                                if dr_size not in dress[1]:
+                                    dress[1].append(dr_size)
+                            result.append([dress[0] + ' ' + item[0], dress[1], dress[2]])
+            else:
+                article = dress[0] + '/1'
+                for item in temp:
+                    if article in item[0]:
+                        for dr_size in item[1]:
+                            if dr_size not in dress[1]:
+                                dress[1].append(dr_size)
+                        result.append([dress[0] + ' ' + item[0], dress[1], dress[2]])
     return result
 
 
@@ -227,6 +250,7 @@ def bigmoda_parse(url):
     pagination_link = url + 'page/'
     data['paginaton_url'] = [pagination_link + str(link) for link in range(2, last_page + 1)]
     data['paginaton_url'].insert(0, url)
+    j = 0
     for page in data['paginaton_url']:
         r = requests.get(page)
         soup = BeautifulSoup(r.text, 'lxml')
@@ -234,7 +258,8 @@ def bigmoda_parse(url):
         data['item_links'] = [item.get('href') for item in data['item_links']]
         i = 0
         l = len(data['item_links'])
-        printProgressBar(i, l, prefix='Progress:', suffix='Complete', length=50)
+        printProgressBar(i, l, prefix='Bigmoda Parsing:',
+                             suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
         for item in data['item_links']:
             r = requests.get(item)
             soup = BeautifulSoup(r.text, 'lxml')
@@ -248,7 +273,9 @@ def bigmoda_parse(url):
             result.append([data['name'], data['sizes_list'], data['price']])
             time.sleep(0.1)
             i += 1
-            printProgressBar(i, l, prefix='Bigmoda Parsing:', suffix='Complete', length=50)
+            printProgressBar(i, l, prefix='Bigmoda Parsing:',
+                             suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
+        j += 1
     return result
 
 
@@ -315,12 +342,9 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
     except ZeroDivisionError:
         pass
 
-
     # Print New Line on Complete
     if iteration == total:
         os.system('cls')
-
-
 
 
 if __name__ == '__main__':
