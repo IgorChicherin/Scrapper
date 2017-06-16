@@ -161,6 +161,7 @@ def avigal_parse(url):
 
 
 def wisell_parse(url):
+    #TODO сделать прокрутку при помощи Selenium
     '''
     Parsing Wisell Site
     :param url: str
@@ -263,6 +264,7 @@ def bigmoda_parse(url):
 
 
 def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
+    #TODO сделать сравнение с визель
     '''
     Compare avaliability supplier and site customer
     :param parse_list: list
