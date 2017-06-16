@@ -169,7 +169,7 @@ def wisell_parse(url):
     r = requests.get(url)
     soup = BeautifulSoup(r.text, 'lxml')
     data = {}
-    temp = []
+    result = []
     data['paginaton'] = soup.find_all('div', {'class': 'page_navi'})
     pagination_links = data['paginaton'][0].find_all('a', {'class': 'menu_link'})
     data['paginaton'] = [item.get('href') for item in pagination_links]
@@ -177,18 +177,19 @@ def wisell_parse(url):
     for link in data['paginaton']:
         if 'https://wisell.ru' + link not in data['paginaton_url']:
             data['paginaton_url'].append('https://wisell.ru' + link)
-    j = 1
+    j = 0
     for page in data['paginaton_url']:
         r = requests.get(page)
         soup = BeautifulSoup(r.text, 'lxml')
         data['item_links'] = soup.find_all('a', {'class': 'image_block'})
         data['item_links'] = ['https://wisell.ru' + link.get('href') for link in data['item_links']]
-        data['item_links'].pop(0)
+        # data['item_links'].pop(0)
         i = 0
         l = len(data['item_links'])
-        printProgressBar(i, l, prefix='Progress:',
-                         suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+        # printProgressBar(i, l, prefix='Progress:',
+        #                  suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
         for item_link in data['item_links']:
+            time.sleep(3)
             r = requests.get(item_link)
             soup = BeautifulSoup(r.text, 'lxml')
             data['price'] = soup.find('span', attrs={'class': 'price_val'})
@@ -196,7 +197,8 @@ def wisell_parse(url):
             data['price'] = int(data['price'].group(0))
             if data['price'] < 1800:
                 i += 1
-                printProgressBar(i, l, prefix='Wisell Parsing:', suffix='Complete', length=50)
+                # printProgressBar(i, l, prefix='Wisell Parsing:',
+                #                  suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
                 continue
             data['name'] = soup.find('li', attrs={'class': 'item_lost'})
             data['name'] = data['name'].span.text
@@ -205,37 +207,13 @@ def wisell_parse(url):
             data['sizes_list'] = [size.text.strip() for size in data['sizes_list']]
             data['sizes_list'].pop(0)
             data['sizes_list'].pop(-1)
-            # print(data['name'], data['sizes_list'], data['price'])
-            temp.append([data['name'], data['sizes_list'], data['price']])
+            print(data['name'], data['sizes_list'], data['price'])
+            result.append([data['name'], data['sizes_list'], data['price']])
             time.sleep(0.1)
             i += 1
-            printProgressBar(i, l, prefix='Wisell Parsing:',
-                             suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+            # printProgressBar(i, l, prefix='Wisell Parsing:',
+            #                  suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
         j += 1
-        result = []
-        for dress in temp:
-            if '/' in dress[0]:
-                article = dress[0].split('/')
-                for item in temp:
-                    if int(article[1]) % 2 != 0:
-                        if article[0] + '/' + (str(int(article[1]) - 1)) in item[0]:
-                            for dr_size in item[1]:
-                                if dr_size not in dress[1]:
-                                    dress[1].append(dr_size)
-                            result.append(['Визель ' + dress[0] + ' ' + item[0], dress[1], dress[2]])
-                        else:
-                            result.append(dress)
-            elif '/' not in dress[0]:
-                article = dress[0] + '/1'
-                for item in temp:
-                    if article in item[0]:
-                        for dr_size in item[1]:
-                            if dr_size not in dress[1]:
-                                dress[1].append(dr_size)
-                        result.append(['Визель ' + dress[0] + ' ' + item[0], dress[1], dress[2]])
-    for item in result:
-       with open('wisell.txt', 'a', encoding='utf-8') as file:
-                file.write('{}\n'.format(item))
     return result
 
 
@@ -255,7 +233,7 @@ def bigmoda_parse(url):
     pagination_link = url + 'page/'
     data['paginaton_url'] = [pagination_link + str(link) for link in range(2, last_page + 1)]
     data['paginaton_url'].insert(0, url)
-    j = 1
+    j = 0
     for page in data['paginaton_url']:
         r = requests.get(page)
         soup = BeautifulSoup(r.text, 'lxml')
@@ -263,8 +241,8 @@ def bigmoda_parse(url):
         data['item_links'] = [item.get('href') for item in data['item_links']]
         i = 0
         l = len(data['item_links'])
-        printProgressBar(i, l, prefix='Bigmoda Parsing:',
-                             suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+        # printProgressBar(i, l, prefix='Bigmoda Parsing:',
+        #                      suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
         for item in data['item_links']:
             r = requests.get(item)
             soup = BeautifulSoup(r.text, 'lxml')
@@ -274,17 +252,13 @@ def bigmoda_parse(url):
             data['sizes_list'] = soup.find('div', {'class': 'ivpa_attribute'}, {'class': 'ivpa_text'})
             data['sizes_list'] = data['sizes_list'].find_all('span', {'class': 'ivpa_term'})
             data['sizes_list'] = [item.text.strip() for item in data['sizes_list']]
-            # print(data['name'], data['sizes_list'], data['price'])
+            print(data['name'], data['sizes_list'], data['price'])
             result.append([data['name'], data['sizes_list'], data['price']])
             time.sleep(0.1)
             i += 1
-            printProgressBar(i, l, prefix='Bigmoda Parsing:',
-                             suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+            # printProgressBar(i, l, prefix='Bigmoda Parsing:',
+            #                  suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
         j += 1
-    for item in result:
-        if 'Визель' in item[0]:
-            with open('bigmoda.txt', 'a', encoding='utf-8') as file:
-                file.write('{}\n'.format(item))
     return result
 
 
@@ -357,7 +331,7 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
 
 
 if __name__ == '__main__':
-    files = ['wisell.txt']
+    files = ['res.txt']
     for file in files:
         if os.path.exists(file):
             os.remove(file)
