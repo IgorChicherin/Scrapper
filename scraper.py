@@ -197,8 +197,8 @@ def wisell_parse(url):
             data['price'] = int(data['price'].group(0))
             if data['price'] < 1800:
                 i += 1
-                # printProgressBar(i, l, prefix='Wisell Parsing:',
-                #                  suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
+                printProgressBar(i, l, prefix='Wisell Parsing:',
+                                 suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
                 continue
             data['name'] = soup.find('li', attrs={'class': 'item_lost'})
             data['name'] = data['name'].span.text
