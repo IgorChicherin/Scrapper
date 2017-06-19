@@ -161,13 +161,14 @@ def avigal_parse(url):
 
 
 def wisell_parse(url):
-    #TODO переделать пагинацию под поиск
     '''
     Parsing Wisell Site
     :param url: str
     :return: list
     '''
     r = requests.get(url)
+    with open('sd.html', 'w', encoding='utf-8') as file:
+        file.write(r.text)
     soup = BeautifulSoup(r.text, 'lxml')
     data = {}
     result = []
@@ -182,24 +183,22 @@ def wisell_parse(url):
     for page in data['paginaton_url']:
         r = requests.get(page)
         soup = BeautifulSoup(r.text, 'lxml')
-        data['item_links'] = soup.find_all('div', {'class': 'item_foot'})
-        data['item_links'] = ['https://wisell.ru' + link.a.get('href') for link in data['item_links']]
-        # data['item_links'].pop(0)
-        # i = 0
-        # l = len(data['item_links'])
-        # printProgressBar(i, l, prefix='Progress:',
-        #                  suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
+        data['item_links'] = soup.find_all('a', {'class': 'item_title'})
+        data['item_links'] = ['https://wisell.ru' + link.get('href') for link in data['item_links']]
+        i = 0
+        l = len(data['item_links'])
+        printProgressBar(i, l, prefix='Progress:',
+                         suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
         for item_link in data['item_links']:
-            # time.sleep(3)
             r = requests.get(item_link)
             soup = BeautifulSoup(r.text, 'lxml')
             data['price'] = soup.find('span', attrs={'class': 'price_val'})
             data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
             data['price'] = int(data['price'].group(0))
             if data['price'] < 1800:
-                # i += 1
-                # printProgressBar(i, l, prefix='Wisell Parsing:',
-                #                  suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
+                i += 1
+                printProgressBar(i, l, prefix='Wisell Parsing:',
+                                 suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
                 continue
             data['name'] = soup.find('li', attrs={'class': 'item_lost'})
             data['name'] = data['name'].span.text
@@ -208,13 +207,13 @@ def wisell_parse(url):
             data['sizes_list'] = [size.text.strip() for size in data['sizes_list']]
             data['sizes_list'].pop(0)
             data['sizes_list'].pop(-1)
-            print(data['name'], data['sizes_list'], data['price'])
+            # print(data['name'], data['sizes_list'], data['price'])
             result.append([data['name'], data['sizes_list'], data['price']])
-        #     time.sleep(0.1)
-        #     i += 1
-        #     # printProgressBar(i, l, prefix='Wisell Parsing:',
-        #     #                  suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
-        # j += 1
+            time.sleep(0.1)
+            i += 1
+            printProgressBar(i, l, prefix='Wisell Parsing:',
+                             suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
+        j += 1
     return result
 
 
@@ -340,7 +339,7 @@ if __name__ == '__main__':
     # novita_dresses = novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
     # primalinea_dresses = primalinea_parse('http://primalinea.ru/catalog/category/42/all/0')
     # avigal_dresses = avigal_parse('http://avigal.ru/dress/')
-    wisell_dresses = wisell_parse(r'https://wisell.ru/search/?q=платье')
+    wisell_dresses = wisell_parse('https://wisell.ru/catalog/platya/')
     # novita_blouse = novita_parse('http://novita-nsk.ru/shop/bluzy/')
     # primalinea_blouse = primalinea_parse('http://primalinea.ru/catalog/category/43/all/0')
     # avigal_blouse = avigal_parse('http://avigal.ru/blouse-tunic/')
