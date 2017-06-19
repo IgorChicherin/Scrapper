@@ -167,8 +167,6 @@ def wisell_parse(url):
     :return: list
     '''
     r = requests.get(url)
-    with open('sd.html', 'w', encoding='utf-8') as file:
-        file.write(r.text)
     soup = BeautifulSoup(r.text, 'lxml')
     data = {}
     result = []
@@ -179,7 +177,7 @@ def wisell_parse(url):
     for link in data['paginaton']:
         if 'https://wisell.ru' + link not in data['paginaton_url']:
             data['paginaton_url'].append('https://wisell.ru' + link)
-    j = 0
+    j = 1
     for page in data['paginaton_url']:
         r = requests.get(page)
         soup = BeautifulSoup(r.text, 'lxml')
@@ -188,7 +186,7 @@ def wisell_parse(url):
         i = 0
         l = len(data['item_links'])
         printProgressBar(i, l, prefix='Progress:',
-                         suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
+                         suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
         for item_link in data['item_links']:
             r = requests.get(item_link)
             soup = BeautifulSoup(r.text, 'lxml')
@@ -198,7 +196,7 @@ def wisell_parse(url):
             if data['price'] < 1800:
                 i += 1
                 printProgressBar(i, l, prefix='Wisell Parsing:',
-                                 suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
+                                 suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
                 continue
             data['name'] = soup.find('li', attrs={'class': 'item_lost'})
             data['name'] = data['name'].span.text
@@ -212,7 +210,7 @@ def wisell_parse(url):
             time.sleep(0.1)
             i += 1
             printProgressBar(i, l, prefix='Wisell Parsing:',
-                             suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
+                             suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
         j += 1
     return result
 
@@ -233,7 +231,7 @@ def bigmoda_parse(url):
     pagination_link = url + 'page/'
     data['paginaton_url'] = [pagination_link + str(link) for link in range(2, last_page + 1)]
     data['paginaton_url'].insert(0, url)
-    j = 0
+    j = 1
     for page in data['paginaton_url']:
         r = requests.get(page)
         soup = BeautifulSoup(r.text, 'lxml')
@@ -241,8 +239,8 @@ def bigmoda_parse(url):
         data['item_links'] = [item.get('href') for item in data['item_links']]
         i = 0
         l = len(data['item_links'])
-        # printProgressBar(i, l, prefix='Bigmoda Parsing:',
-        #                      suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
+        printProgressBar(i, l, prefix='Bigmoda Parsing:',
+                         suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
         for item in data['item_links']:
             r = requests.get(item)
             soup = BeautifulSoup(r.text, 'lxml')
@@ -252,18 +250,18 @@ def bigmoda_parse(url):
             data['sizes_list'] = soup.find('div', {'class': 'ivpa_attribute'}, {'class': 'ivpa_text'})
             data['sizes_list'] = data['sizes_list'].find_all('span', {'class': 'ivpa_term'})
             data['sizes_list'] = [item.text.strip() for item in data['sizes_list']]
-            print(data['name'], data['sizes_list'], data['price'])
+            # print(data['name'], data['sizes_list'], data['price'])
             result.append([data['name'], data['sizes_list'], data['price']])
             time.sleep(0.1)
             i += 1
-            # printProgressBar(i, l, prefix='Bigmoda Parsing:',
-            #                  suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url']) - 1), length=50)
+            printProgressBar(i, l, prefix='Bigmoda Parsing:',
+                             suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
         j += 1
     return result
 
 
 def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
-    #TODO сделать сравнение с визель
+    # TODO сделать сравнение с визель
     '''
     Compare avaliability supplier and site customer
     :param parse_list: list
@@ -271,11 +269,20 @@ def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
     :param bigmoda_exc: list
     :return: boolean
     '''
+    bigmoda_dresses = [['Визель П3-2596/3 П3-2596/2', ['52', '54', '56', '58', '60', '68', '112'], '2800']]
+    parse_list = [['П3-2596/3', ['52', '54', '56', '58', '62', '60', '123'], 2800],
+                  ['П3-2596/2', ['42', '46', '48', '50'], 2800]]
     for dress in parse_list:
         if dress not in bigmoda_exc:
             for bm_drs in bigmoda_dresses:
-                if dress[0] == bm_drs[0]:
+                bm_name = bm_drs[0].split(' ')
+                if (len(bm_name) > 2) and ('Новита' not in bm_name[0]) and (dress[0] == bm_name[1]):
                     size_to_add = []
+                    for bm_drs2 in parse_list:
+                        if bm_drs2[0] == bm_name[2]:
+                            for size in bm_drs2[1]:
+                                if (size not in bm_drs[1]) and (int(size) > 46):
+                                    size_to_add.append(size)
                     for size in dress[1]:
                         if size not in bm_drs[1]:
                             size_to_add.append(size)
@@ -284,21 +291,39 @@ def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
                             file.write('Добавить размеры: {}, {}, {}\n'.format(dress[0], size_to_add, dress[2]))
                     size_to_del = []
                     for size in bm_drs[1]:
-                        if size not in dress[1]:
-                            size_to_del.append(size)
+                        for drs in parse_list:
+                            if drs[0] == bm_name[1] or drs[0] == bm_name[2]:
+                                if size not in drs[1]:
+                                    size_to_del.append(size)
                     if len(size_to_del) != 0:
                         with open('res.txt', 'a', encoding='utf-8') as file:
                             file.write('Удалить размеры: {}, {}, {}\n'.format(dress[0], size_to_del, dress[2]))
-    for dress in parse_list:
-        if dress not in bigmoda_dresses:
-            with open('res.txt', 'a', encoding='utf-8') as file:
-                file.write('Добавить карточку: {}, {}, {}\n'.format(dress[0], dress[1], dress[2]))
+                else:
+                    if dress[0] == bm_drs[0]:
+                        size_to_add = []
+                        for size in dress[1]:
+                            if size not in bm_drs[1]:
+                                size_to_add.append(size)
+                        if len(size_to_add) != 0:
+                            with open('res.txt', 'a', encoding='utf-8') as file:
+                                file.write('Добавить размеры: {}, {}, {}\n'.format(dress[0], size_to_add, dress[2]))
+                        size_to_del = []
+                        for size in bm_drs[1]:
+                            if size not in dress[1]:
+                                size_to_del.append(size)
+                        if len(size_to_del) != 0:
+                            with open('res.txt', 'a', encoding='utf-8') as file:
+                                file.write('Удалить размеры: {}, {}, {}\n'.format(dress[0], size_to_del, dress[2]))
+    # for dress in parse_list:
+    #     if dress[0] not in bigmoda_dresses[0]:
+    #         with open('res.txt', 'a', encoding='utf-8') as file:
+    #             file.write('Добавить карточку: {}, {}, {}\n'.format(dress[0], dress[1], dress[2]))
     return True
 
 
 def del_item(goods_data):
     for dress in bigmoda_dresses:
-        if dress not in goods_data:
+        if dress[0] not in goods_data[0]:
             with open('res.txt', 'a', encoding='utf-8') as file:
                 file.write('Удалить карточку: {}\n'.format(dress[0]))
     return goods_data
@@ -336,10 +361,13 @@ if __name__ == '__main__':
     for file in files:
         if os.path.exists(file):
             os.remove(file)
+    wisell_dresses = []
+    bigmoda_dresses = []
+    bigmoda_exc = []
     # novita_dresses = novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
     # primalinea_dresses = primalinea_parse('http://primalinea.ru/catalog/category/42/all/0')
     # avigal_dresses = avigal_parse('http://avigal.ru/dress/')
-    wisell_dresses = wisell_parse('https://wisell.ru/catalog/platya/')
+    # wisell_dresses = wisell_parse('https://wisell.ru/catalog/platya/')
     # novita_blouse = novita_parse('http://novita-nsk.ru/shop/bluzy/')
     # primalinea_blouse = primalinea_parse('http://primalinea.ru/catalog/category/43/all/0')
     # avigal_blouse = avigal_parse('http://avigal.ru/blouse-tunic/')
@@ -350,7 +378,7 @@ if __name__ == '__main__':
     # compare_dress(novita_dresses, bigmoda_dresses, bigmoda_exc)
     # compare_dress(primalinea_dresses, bigmoda_dresses, bigmoda_exc)
     # compare_dress(avigal_dresses, bigmoda_dresses, bigmoda_exc)
-    # compare_dress(wisell_dresses, bigmoda_dresses, bigmoda_exc)
+    compare_dress(wisell_dresses, bigmoda_dresses, bigmoda_exc)
     # compare_dress(novita_blouse, bigmoda_dresses, bigmoda_exc)
     # compare_dress(primalinea_blouse, bigmoda_dresses, bigmoda_exc)
     # compare_dress(avigal_blouse, bigmoda_dresses, bigmoda_exc)
