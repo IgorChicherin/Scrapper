@@ -315,9 +315,9 @@ def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
                             with open('res.txt', 'a', encoding='utf-8') as file:
                                 file.write('Удалить размеры: {}, {}, {}\n'.format(dress[0], size_to_del, dress[2]))
     for cmp in parse_list:
-        if len(cmp[0].split(' ')) > 1 and cmp[0] not in bigmoda_dresses[0]:
+        if cmp[0] not in bigmoda_dresses[0]:
             with open('res.txt', 'a', encoding='utf-8') as file:
-                file.write('Добавить карточку: {}, {}, {}\n'.format(dress[0], dress[1], dress[2]))
+                file.write('Добавить карточку: {}, {}, {}\n'.format(cmp[0], cmp[1], cmp[2]))
     return True
 
 
