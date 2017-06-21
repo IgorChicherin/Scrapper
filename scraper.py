@@ -207,8 +207,33 @@ def wisell_parse(url):
             data['sizes_list'] = [size.text.strip() for size in data['sizes_list']]
             data['sizes_list'].pop(0)
             data['sizes_list'].pop(-1)
-            print(data['name'], data['sizes_list'], data['price'])
-            result.append([data['name'], data['sizes_list'], data['price']])
+            data['small_sizes'] = soup.find('ul', attrs={'id': 'size-interval-tabs'}).findAll('li')
+            if data['small_sizes'][0]['data-url'] != '' and len(data['small_sizes']) > 1:
+                data['small_sizes'] = 'https://wisell.ru' + data['small_sizes'][0]['data-url']
+                r = requests.get(data['small_sizes'])
+                soup = BeautifulSoup(r.text, 'lxml')
+                small_name = soup.find('li', attrs={'class': 'item_lost'})
+                if small_name.span.text != data['name']:
+                    data['name'] = data['name'] + ' ' + small_name.span.text
+                    small_sizes_list = soup.find_all('ul', {'class': 'size_list'})
+                    small_sizes_list = small_sizes_list[0].find_all('li', {'class': 'check_item'})
+                    small_sizes_list = [size.text.strip() for size in small_sizes_list]
+                    small_sizes_list.pop(0)
+                    small_sizes_list.pop(-1)
+                    for size in small_sizes_list:
+                        if size not in data['sizes_list'] and int(size) > 46:
+                            data['sizes_list'].append(size)
+                print(data['name'], data['sizes_list'], data['price'])
+                result.append(['Визель ' + data['name'], data['sizes_list'], data['price']])
+            elif len(data['small_sizes']) == 1:
+                sizes_list = []
+                for size in data['sizes_list']:
+                    if int(size) > 46:
+                        sizes_list.append(size)
+                if len(sizes_list) != 0:
+                    print(data['name'], sizes_list, data['price'])
+                    result.append(['Визель ' + data['name'], sizes_list, data['price']])
+            # print(['Визель ' + data['name'], data['sizes_list'], data['price']])
         #     time.sleep(0.1)
         #     i += 1
         #     printProgressBar(i, l, prefix='Wisell Parsing:',
@@ -384,7 +409,7 @@ if __name__ == '__main__':
     #     file.write(str(novita_dresses))
     # primalinea_dresses = primalinea_parse('http://primalinea.ru/catalog/category/42/all/0')
     # avigal_dresses = avigal_parse('http://avigal.ru/dress/')
-    # wisell_dresses = wisell_parse('https://wisell.ru/catalog/platya/')
+    wisell_dresses = wisell_parse('https://wisell.ru/catalog/platya/')
     # with open('wisell.txt', 'w', encoding='utf-8') as file:
     #     file.write(str(wisell_dresses))
     # novita_blouse = novita_parse('http://novita-nsk.ru/shop/bluzy/')
