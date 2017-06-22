@@ -146,16 +146,16 @@ def avigal_parse(url):
                 data['price'] = soup.find('span', attrs={'class': 'micro-price', 'itemprop': 'price'})
                 data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
                 data['price'] = int(data['price'].group(0)) * 2
-                if data['price'] > 2500:
-                    data['name'] = soup.find('span', attrs={'itemprop': 'model'})
-                    data['name'] = data['name'].text
-                    sizes_list = soup.find_all('label', {'class': 'optid-13'})
-                    data['sizes_list'] = []
-                    for item in sizes_list:
-                        if r':n\a' not in item['title']:
-                            data['sizes_list'].append(item.text.strip())
-                    # print('Авигаль ' + data['name'], data['sizes_list'], data['price'])
-                    result.append(['Авигаль ' + data['name'], data['sizes_list'], data['price']])
+                # if data['price'] > 2500:
+                data['name'] = soup.find('span', attrs={'itemprop': 'model'})
+                data['name'] = data['name'].text
+                sizes_list = soup.find_all('label', {'class': 'optid-13'})
+                data['sizes_list'] = []
+                for item in sizes_list:
+                    if r':n\a' not in item['title']:
+                        data['sizes_list'].append(item.text.strip())
+                # print('Авигаль ' + data['name'], data['sizes_list'], data['price'])
+                result.append(['Авигаль ' + data['name'], data['sizes_list'], data['price']])
                 time.sleep(0.1)
                 i += 1
                 printProgressBar(i, l, prefix='Avigal Parsing:', suffix='Complete', length=50)
