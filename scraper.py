@@ -287,7 +287,6 @@ def bigmoda_parse(url):
 
 
 def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
-    # TODO не работает удалить добавить карточку
     '''
     Compare avaliability supplier and site customer
     :param parse_list: list
