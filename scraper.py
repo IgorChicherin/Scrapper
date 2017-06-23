@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import requests
 import os
 import re
@@ -172,13 +171,22 @@ def wisell_parse(url):
     soup = BeautifulSoup(r.text, 'lxml')
     data = {}
     result = []
-    data['paginaton'] = soup.find_all('div', {'class': 'page_navi'})
-    pagination_links = data['paginaton'][0].find_all('a', {'class': 'menu_link'})
-    data['paginaton'] = [item.get('href') for item in pagination_links]
+    last = False
     data['paginaton_url'] = [url]
-    for link in data['paginaton']:
-        if 'https://wisell.ru' + link not in data['paginaton_url']:
-            data['paginaton_url'].append('https://wisell.ru' + link)
+    while last == False:
+        data['paginaton'] = soup.find_all('div', {'class': 'page_navi'})
+        pagination_links = data['paginaton'][0].find_all('a', {'class': 'menu_link'})
+        if pagination_links[-1].text == 'Следующая':
+            r = requests.get('https://wisell.ru' + pagination_links[-1].get('href'))
+            soup = BeautifulSoup(r.text, 'lxml')
+            data['paginaton'] = soup.find_all('div', {'class': 'page_navi'})
+            pagination_links = data['paginaton'][0].find_all('a', {'class': 'menu_link'})
+            data['paginaton'] = [item.get('href') for item in pagination_links]
+            for link in data['paginaton']:
+                if 'https://wisell.ru' + link not in data['paginaton_url']:
+                    data['paginaton_url'].append('https://wisell.ru' + link)
+        else:
+            last =True
     j = 1
     for page in data['paginaton_url']:
         r = requests.get(page)
@@ -288,7 +296,7 @@ def bigmoda_parse(url):
 
 def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
     '''
-    Compare avaliability supplier and site customer
+    Compare avaliability sizes supplier and site customer
     :param parse_list: list
     :param bigmoda_dresses: list
     :param bigmoda_exc: list
@@ -312,22 +320,23 @@ def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
                     if len(size_to_del) != 0:
                         with open('добавить удалить размеры.txt', 'a', encoding='utf-8') as file:
                             file.write('Удалить размеры: {}, {}, {}\n'.format(dress[0], size_to_del, dress[2]))
-
     return True
+
 
 def del_item(goods_data):
     names = [i[0] for i in goods_data]
-    with open('names.txt', 'a', encoding='utf-8') as file:
-        file.write(str(names))
-    bm_names = [i[0] for i in bigmoda_dresses]
-    with open('bm_names.txt', 'a', encoding='utf-8') as file:
-        file.write(str(names))
-    for bm_dress in bigmoda_dresses:
-        if bm_dress[0] not in names:
+    bm_names_dress = [i[0] for i in bigmoda_pages[0]]
+    bm_names_blouse = [i[0] for i in bigmoda_pages[1]]
+    for bm_dress in bm_names_dress:
+        if bm_dress not in names:
             with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
-                file.write('Удалить карточку: {}\n'.format(bm_dress[0]))
+                file.write('Удалить карточку: {}\n'.format(bm_dress))
+    for bm_blouse in bm_names_blouse:
+        if bm_blouse not in names:
+            with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
+                file.write('Удалить карточку: {}\n'.format(bm_blouse))
     for name in goods_data:
-        if name not in bm_names:
+        if name not in bm_names_dress or name not in bm_names_blouse:
             with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
                 file.write('Добавить карточку: {} {} {}\n'.format(name[0], name[1], name[2]))
     return goods_data
@@ -361,47 +370,28 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
 
 
 if __name__ == '__main__':
-    files = ['добавить удалить размеры.txt', 'добавить удалить карточки.txt', 'names.txt', 'bm_names.txt']
+    files = ['добавить удалить размеры.txt', 'добавить удалить карточки.txt']
     for file in files:
         if os.path.exists(file):
             os.remove(file)
-    novita_dresses = novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/')
-    primalinea_dresses = primalinea_parse('http://primalinea.ru/catalog/category/42/all/0')
-    avigal_dresses = avigal_parse('http://avigal.ru/dress/')
-    wisell_dresses = wisell_parse('https://wisell.ru/catalog/platya/')
-    bigmoda_dresses = bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/')
-    novita_blouse = novita_parse('http://novita-nsk.ru/shop/bluzy/')
-    primalinea_blouse = primalinea_parse('http://primalinea.ru/catalog/category/43/all/0')
-    avigal_blouse = avigal_parse('http://avigal.ru/blouse-tunic/')
-    wisell_blouse = wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')
-    bigmoda_blouse = bigmoda_parse('https://big-moda.com/product-category/bluzki-bolshih-razmerov/')
-    bigmoda_exc = bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')
 
-    compare_dress(novita_dresses, bigmoda_dresses, bigmoda_exc)
-    compare_dress(primalinea_dresses, bigmoda_dresses, bigmoda_exc)
-    compare_dress(avigal_dresses, bigmoda_dresses, bigmoda_exc)
-    compare_dress(wisell_dresses, bigmoda_dresses, bigmoda_exc)
-    compare_dress(novita_blouse, bigmoda_dresses, bigmoda_exc)
-    compare_dress(primalinea_blouse, bigmoda_dresses, bigmoda_exc)
-    compare_dress(avigal_blouse, bigmoda_dresses, bigmoda_exc)
-    compare_dress(wisell_blouse, bigmoda_dresses, bigmoda_exc)
-
+    dress_pages = [novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/'),
+                   primalinea_parse('http://primalinea.ru/catalog/category/42/all/0'),
+                   avigal_parse('http://avigal.ru/dress/'), wisell_parse('https://wisell.ru/catalog/platya/')]
+    blouse_pages = [novita_parse('http://novita-nsk.ru/shop/bluzy/'),
+                    primalinea_parse('http://primalinea.ru/catalog/category/43/all/0'),
+                    avigal_parse('http://avigal.ru/blouse-tunic/'),
+                    wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')]
+    bigmoda_pages = [bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/'),
+                     bigmoda_parse('https://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
+                     bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')]
     goods_data = []
-
-    for dress in novita_dresses:
-        goods_data.insert(-1, dress)
-    for dress in avigal_dresses:
-        goods_data.insert(-1, dress)
-    for dress in primalinea_dresses:
-        goods_data.insert(-1, dress)
-    for dress in wisell_dresses:
-        goods_data.insert(-1, dress)
-    for dress in novita_blouse:
-        goods_data.insert(-1, dress)
-    for dress in avigal_blouse:
-        goods_data.insert(-1, dress)
-    for dress in primalinea_blouse:
-        goods_data.insert(-1, dress)
-    for dress in wisell_blouse:
-        goods_data.insert(-1, dress)
+    for site in dress_pages:
+        compare_dress(site, bigmoda_pages[0], bigmoda_pages[2])
+        for dress in site:
+            goods_data.append(dress)
+    for site in blouse_pages:
+        compare_dress(site, bigmoda_pages[0], bigmoda_pages[2])
+        for blouse in site:
+            goods_data.append(blouse)
     del_item(goods_data)
