@@ -1,9 +1,11 @@
 import requests
 import os
 import re
-from bs4 import BeautifulSoup
 import time
 import sys
+
+from bs4 import BeautifulSoup
+
 
 
 def create_sizes_dict(color_list, sizes_list, sizes_accepted):
@@ -126,38 +128,44 @@ def avigal_parse(url):
     data['paginaton_url'] = []
     data['item_links'] = []
     items_link_list = []
+    j = 1
     for page in data['paginaton']:
         try:
-            link = page.a.text
+            page.a.text
         except AttributeError:
             continue
         if page.a.get('href') not in data['paginaton_url']:
             data['paginaton_url'].append(page.a.get('href'))
-        for link in data['paginaton_url']:
-            items_link_list = soup.find_all('a', {'class': 'hover-image'})
-            items_link_list = [item.get('href') for item in items_link_list]
-            i = 0
-            l = len(items_link_list)
-            printProgressBar(i, l, prefix='Progress:', suffix='Complete', length=50)
-            for link in items_link_list:
-                r = session.get(link)
-                soup = BeautifulSoup(r.text, 'lxml')
-                data['price'] = soup.find('span', attrs={'class': 'micro-price', 'itemprop': 'price'})
-                data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
-                data['price'] = int(data['price'].group(0)) * 2
-                # if data['price'] > 2500:
-                data['name'] = soup.find('span', attrs={'itemprop': 'model'})
-                data['name'] = data['name'].text
-                sizes_list = soup.find_all('label', {'class': 'optid-13'})
-                data['sizes_list'] = []
-                for item in sizes_list:
-                    if r':n\a' not in item['title']:
-                        data['sizes_list'].append(item.text.strip())
-                # print('Авигаль ' + data['name'], data['sizes_list'], data['price'])
-                result.append(['Авигаль ' + data['name'], data['sizes_list'], data['price']])
-                time.sleep(0.1)
-                i += 1
-                printProgressBar(i, l, prefix='Avigal Parsing:', suffix='Complete', length=50)
+    for link in data['paginaton_url']:
+        r = session.get(link)
+        soup = BeautifulSoup(r.text, 'lxml')
+        items_link_list = soup.find_all('div', {'class': 'product-about'})
+        items_link_list = [item.find('div', attrs={'class': 'name'}).a.get('href') for item in items_link_list]
+        i = 0
+        l = len(items_link_list)
+        printProgressBar(i, l, prefix='Wisell Parsing:',
+                         suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+        for link in items_link_list:
+            r = session.get(link)
+            soup = BeautifulSoup(r.text, 'lxml')
+            data['price'] = soup.find('span', attrs={'class': 'micro-price', 'itemprop': 'price'})
+            data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
+            data['price'] = int(data['price'].group(0)) * 2
+            # if data['price'] > 2500:
+            data['name'] = soup.find('span', attrs={'itemprop': 'model'})
+            data['name'] = data['name'].text
+            sizes_list = soup.find_all('label', {'class': 'optid-13'})
+            data['sizes_list'] = []
+            for item in sizes_list:
+                if r':n\a' not in item['title']:
+                    data['sizes_list'].append(item.text.strip())
+            # print('Авигаль ' + data['name'], data['sizes_list'], data['price'])
+            result.append(['Авигаль ' + data['name'], data['sizes_list'], data['price']])
+            time.sleep(0.1)
+            i += 1
+            printProgressBar(i, l, prefix='Avigal Parsing:',
+                             suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+        j += 1
     return result
 
 
@@ -376,6 +384,9 @@ if __name__ == '__main__':
             os.remove(file)
 
     dress_pages = [novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/'),
+                   novita_parse('http://novita-nsk.ru/shop/aktsii/'),
+                   novita_parse('http://novita-nsk.ru/index.php?route=product/category&path=1_19'),
+                   novita_parse('http://novita-nsk.ru/shop/yubki/'),
                    primalinea_parse('http://primalinea.ru/catalog/category/42/all/0'),
                    avigal_parse('http://avigal.ru/dress/'), wisell_parse('https://wisell.ru/catalog/platya/')]
     blouse_pages = [novita_parse('http://novita-nsk.ru/shop/bluzy/'),
