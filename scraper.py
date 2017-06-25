@@ -46,7 +46,7 @@ def novita_parse(url):
         r = requests.get(url)
         soup = BeautifulSoup(r.text.encode('utf-8'), 'lxml')
         data = {}
-        data['name'] = re.search(r'(?<=№)(\d+/\d+)|(\d+)', soup.h1.text.strip()).group(0)
+        data['name'] = re.search(r'(?<=№)(\d+/\d+)|(?<=№)(\d+)', soup.h1.text.strip()).group(0)
         colors = soup.find_all('td', {'class': 'col-color'})
         data['color_list'] = [color.text.strip() for color in colors if color.text.strip() != 'Цвет/размер']
         data['sizes_list'] = soup.find_all('td', {'class': 'inv'})
@@ -125,7 +125,7 @@ def avigal_parse(url):
     result = []
     data['paginaton'] = soup.find_all('div', {'class': 'pagination'})
     data['paginaton'] = data['paginaton'][0].find_all('li')
-    data['paginaton_url'] = []
+    data['paginaton_url'] = [url]
     data['item_links'] = []
     items_link_list = []
     j = 1
