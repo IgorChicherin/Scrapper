@@ -3,9 +3,9 @@ import os
 import re
 import time
 import sys
+import csv
 
 from bs4 import BeautifulSoup
-
 
 
 def create_sizes_dict(color_list, sizes_list, sizes_accepted):
@@ -194,7 +194,7 @@ def wisell_parse(url):
                 if 'https://wisell.ru' + link not in data['paginaton_url']:
                     data['paginaton_url'].append('https://wisell.ru' + link)
         else:
-            last =True
+            last = True
     j = 1
     for page in data['paginaton_url']:
         r = requests.get(page)
@@ -331,6 +331,27 @@ def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
     return True
 
 
+def krasa_parse(file_name):
+    result = []
+    with open(file_name) as csvfile:
+        reader = csv.reader(csvfile, dialect='excel', delimiter=';')
+        for row in reader:
+            if 'последние экземпляры' in row[0]:
+                break
+            if ('Наименование' or '') not in row[0]:
+                try:
+                    name = 'Краса ' + re.search(r'(П-\d+|ПБ-\d+|Р-\d+|РБ-\d+)', row[0]).group(0)
+                    price = re.search(r'(\d+)', row[1].strip().replace(' ', '')).group(0)
+                    price = 2400 if int(price) < 1200 else int(price) * 2
+                    sizes = row[2].split('-')
+                    sizes_list = [str(size) for size in range(int(sizes[0]), int(sizes[1]) + 1)]
+                    # print(name, sizes_list, price)
+                    result.append([name, sizes_list, price])
+                except AttributeError:
+                    continue
+    return result
+
+
 def del_item(goods_data):
     names = [i[0] for i in goods_data]
     bm_names_dress = [i[0] for i in bigmoda_pages[0]]
@@ -388,7 +409,8 @@ if __name__ == '__main__':
                    novita_parse('http://novita-nsk.ru/index.php?route=product/category&path=1_19'),
                    novita_parse('http://novita-nsk.ru/shop/yubki/'),
                    primalinea_parse('http://primalinea.ru/catalog/category/42/all/0'),
-                   avigal_parse('http://avigal.ru/dress/'), wisell_parse('https://wisell.ru/catalog/platya/')]
+                   avigal_parse('http://avigal.ru/dress/'), wisell_parse('https://wisell.ru/catalog/platya/'),
+                   krasa_parse('krasa.csv')]
     blouse_pages = [novita_parse('http://novita-nsk.ru/shop/bluzy/'),
                     primalinea_parse('http://primalinea.ru/catalog/category/43/all/0'),
                     avigal_parse('http://avigal.ru/blouse-tunic/'),
@@ -396,13 +418,14 @@ if __name__ == '__main__':
     bigmoda_pages = [bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/'),
                      bigmoda_parse('https://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
                      bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')]
+
     goods_data = []
     for site in dress_pages:
         compare_dress(site, bigmoda_pages[0], bigmoda_pages[2])
         for dress in site:
             goods_data.append(dress)
     for site in blouse_pages:
-        compare_dress(site, bigmoda_pages[0], bigmoda_pages[2])
+        compare_dress(site, bigmoda_pages[1], bigmoda_pages[2])
         for blouse in site:
             goods_data.append(blouse)
     del_item(goods_data)
