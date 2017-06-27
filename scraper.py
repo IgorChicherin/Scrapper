@@ -358,6 +358,11 @@ def krasa_parse(file_name):
 
 
 def del_item(goods_data):
+    '''
+    Check availability goods on Bigmoda and supplier  
+    :param goods_data: list
+    :return: list
+    '''
     names = [i[0] for i in goods_data]
     bm_names_dress = [i[0] for i in bigmoda_pages[0]]
     bm_names_blouse = [i[0] for i in bigmoda_pages[1]]
