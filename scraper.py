@@ -332,6 +332,11 @@ def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
 
 
 def krasa_parse(file_name):
+    '''
+    Parsing goods from krasa.csv
+    :param file_name: str
+    :return: list
+    '''
     result = []
     with open(file_name) as csvfile:
         reader = csv.reader(csvfile, dialect='excel', delimiter=';')
