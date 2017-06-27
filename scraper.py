@@ -175,7 +175,10 @@ def wisell_parse(url):
     :param url: str
     :return: list
     '''
-    r = requests.get(url)
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:45.0) Gecko/20100101 Firefox/45.0'
+    }
+    r = requests.get(url, headers=headers)
     soup = BeautifulSoup(r.text, 'lxml')
     data = {}
     result = []
@@ -197,7 +200,7 @@ def wisell_parse(url):
             last = True
     j = 1
     for page in data['paginaton_url']:
-        r = requests.get(page)
+        r = requests.get(page, headers=headers)
         soup = BeautifulSoup(r.text, 'lxml')
         data['item_links'] = soup.find_all('a', {'class': 'item_title'})
         data['item_links'] = ['https://wisell.ru' + link.get('href') for link in data['item_links']]
@@ -206,8 +209,17 @@ def wisell_parse(url):
         printProgressBar(i, l, prefix='Progress:',
                          suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
         for item_link in data['item_links']:
-            r = requests.get(item_link)
+            r = requests.get(item_link, headers=headers)
             soup = BeautifulSoup(r.text, 'lxml')
+            data['name'] = soup.find('li', attrs={'class': 'item_lost'})
+            data['name'] = data['name'].span.text
+            if soup.h2.text == 'Нет в наличии':
+                with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
+                    file.write('Нет в наличии на сайте Wisell: {}\n'.format(data['name']))
+                    i += 1
+                    printProgressBar(i, l, prefix='Wisell Parsing:',
+                                     suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+                continue
             data['price'] = soup.find('span', attrs={'class': 'price_val'})
             data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
             data['price'] = int(data['price'].group(0))
@@ -216,8 +228,6 @@ def wisell_parse(url):
                 printProgressBar(i, l, prefix='Wisell Parsing:',
                                  suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
                 continue
-            data['name'] = soup.find('li', attrs={'class': 'item_lost'})
-            data['name'] = data['name'].span.text
             data['sizes_list'] = soup.find_all('ul', {'class': 'size_list'})
             data['sizes_list'] = data['sizes_list'][0].find_all('li', {'class': 'check_item'})
             data['sizes_list'] = [size.text.strip() for size in data['sizes_list']]
@@ -226,10 +236,18 @@ def wisell_parse(url):
             data['small_sizes'] = soup.find('ul', attrs={'id': 'size-interval-tabs'}).findAll('li')
             if data['small_sizes'][0]['data-url'] != '' and len(data['small_sizes']) > 1:
                 data['small_sizes'] = 'https://wisell.ru' + data['small_sizes'][0]['data-url']
-                r = requests.get(data['small_sizes'])
+                r = requests.get(data['small_sizes'], headers=headers)
                 soup = BeautifulSoup(r.text, 'lxml')
                 small_name = soup.find('li', attrs={'class': 'item_lost'})
                 if small_name.span.text != data['name']:
+                    if soup.h2.text == 'Нет в наличии':
+                        with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
+                            file.write('Нет в наличии на сайте Wisell: {}\n'.format(small_name.span.text))
+                            i += 1
+                            printProgressBar(i, l, prefix='Wisell Parsing:',
+                                             suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])),
+                                             length=50)
+                        continue
                     data['name'] = data['name'] + ' ' + small_name.span.text
                     small_sizes_list = soup.find_all('ul', {'class': 'size_list'})
                     small_sizes_list = small_sizes_list[0].find_all('li', {'class': 'check_item'})

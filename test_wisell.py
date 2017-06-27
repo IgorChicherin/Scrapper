@@ -74,4 +74,16 @@ def wisell_parse(url):
     return result
 
 
-wisell_parse('https://wisell.ru/catalog/platya/')
+# wisell_parse('https://wisell.ru/catalog/platya/')
+data = {}
+r = requests.get('https://wisell.ru/catalog/platya/k4-3646/')
+soup = BeautifulSoup(r.text, 'lxml')
+
+# try:
+#     data['price'] = soup.find('span', attrs={'class': 'price_val'})
+#     data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
+# except AttributeError:
+#     data['price'] = soup.find('meta', attrs={'itemprop': 'price'})['content']
+#     data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
+#     data['price'] = int(data['price'].group(0))
+print(soup.h2.text)
