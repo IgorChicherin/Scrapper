@@ -5,6 +5,8 @@ import time
 import sys
 import csv
 
+import pymysql
+
 from bs4 import BeautifulSoup
 
 
@@ -310,8 +312,16 @@ def bigmoda_parse(url):
             data['sizes_list'] = soup.find('div', {'class': 'ivpa_attribute'}, {'class': 'ivpa_text'})
             data['sizes_list'] = data['sizes_list'].find_all('span', {'class': 'ivpa_term'})
             data['sizes_list'] = [item.text.strip() for item in data['sizes_list']]
-            # print(data['name'], data['sizes_list'], data['price'])
-            result.append([data['name'], data['sizes_list'], data['price']])
+            data['product_id'] = re.search(r'(\d+)', soup.find('div', attrs={'class': 'product'})['id']).group(0)
+            sizes_id = re.findall(r'(?<="variation_id":)(\d+)',
+                                  soup.find('div', attrs={'id': 'ivpa-content'})['data-variations'])
+
+            sizes_key = re.findall(r'(?<="attribute_pa_size":)"(\d+)"',
+                                   soup.find('div', attrs={'id': 'ivpa-content'})['data-variations'])
+            data['product_size_id'] = dict(zip(sizes_key, sizes_id))
+            # print([data['name'], data['sizes_list'], data['price'], data['product_id'], data['product_size_id']])
+            result.append(
+                [data['name'], data['sizes_list'], data['price'], data['product_id'], data['product_size_id']])
             time.sleep(0.1)
             i += 1
             printProgressBar(i, l, prefix='Bigmoda Parsing:',
@@ -328,6 +338,8 @@ def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
     :param bigmoda_exc: list
     :return: boolean
     '''
+    conn = pymysql.connect(host='localhost', user='root', passwd='oruri448', db='olegsent_wp8')
+    cur = conn.cursor()
     for dress in parse_list:
         if dress not in bigmoda_exc:
             for bm_drs in bigmoda_dresses:
@@ -336,6 +348,71 @@ def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
                     for size in dress[1]:
                         if size not in bm_drs[1]:
                             size_to_add.append(size)
+                            query = '''
+                                    START TRANSACTION;   
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_regular_price', '{1}');
+                                    
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_sale_price', '');
+                                      
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_sale_price_dates_from', '');
+                                    
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_sale_price_dates_to', '');
+                                    
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_price', '{1}');
+                                    
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', 'attribute_pa_size', '{2}');
+                                    
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_stock_status', 'instock');
+                                    
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_sku', '');
+                                    
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_thumbnail_id', '0');
+                                    
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_virtual', 'no');
+                                                                                              
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_downloadable', 'no');
+                                    
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_weight', '');
+                                      
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_length', ''); 
+                                    
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_width', ''); 
+                                    
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_height', ''); 
+                                    
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_manage_stock', 'no');
+                                    
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_download_limit', ''); 
+                                    
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_download_expiry', ''); 
+                                    
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_downloadable_files', ''); 
+                                    
+                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    VALUES ('{0}', '_variation_description', ''); 
+                                                                    
+                                    COMMIT;
+                                    '''.format(bm_drs[3], bm_drs[2], size)
+                            cur.execute(query)
                     if len(size_to_add) != 0:
                         with open('добавить удалить размеры.txt', 'a', encoding='utf-8') as file:
                             file.write('Добавить размеры: {}, {}, {}\n'.format(dress[0], size_to_add, dress[2]))
@@ -439,21 +516,22 @@ if __name__ == '__main__':
                    primalinea_parse('http://primalinea.ru/catalog/category/42/all/0'),
                    avigal_parse('http://avigal.ru/dress/'), wisell_parse('https://wisell.ru/catalog/platya/'),
                    krasa_parse('krasa.csv')]
-    blouse_pages = [novita_parse('http://novita-nsk.ru/shop/bluzy/'),
-                    primalinea_parse('http://primalinea.ru/catalog/category/43/all/0'),
-                    avigal_parse('http://avigal.ru/blouse-tunic/'),
-                    wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')]
-    bigmoda_pages = [bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/'),
-                     bigmoda_parse('https://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
-                     bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')]
-
+    # blouse_pages = [novita_parse('http://novita-nsk.ru/shop/bluzy/'),
+    #                 primalinea_parse('http://primalinea.ru/catalog/category/43/all/0'),
+    #                 avigal_parse('http://avigal.ru/blouse-tunic/'),
+    #                 wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')]
+    # bigmoda_pages = [bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/'),
+    #                  bigmoda_parse('https://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
+    #                  bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')]
+    bigmoda_pages = [bigmoda_parse('http://localhost/product-category/platya-bolshih-razmerov/'),
+                     #bigmoda_parse('http://localhost/product-category/bluzki-bolshih-razmerov/'),
+                     bigmoda_parse('http://localhost/product-category/rasprodazha-bolshie-razmery/')]
+    #
     goods_data = []
     for site in dress_pages:
-        compare_dress(site, bigmoda_pages[0], bigmoda_pages[2])
+        compare_dress(site, bigmoda_pages[0], bigmoda_pages[1])
         for dress in site:
             goods_data.append(dress)
-    for site in blouse_pages:
-        compare_dress(site, bigmoda_pages[1], bigmoda_pages[2])
-        for blouse in site:
-            goods_data.append(blouse)
+    # for site in blouse_pages:
+    #     compare_dress(site, bigmoda_pages[1], bigmoda_pages[2])
     del_item(goods_data)
