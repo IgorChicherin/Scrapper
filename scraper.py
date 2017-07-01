@@ -7,6 +7,8 @@ import sys
 import csv
 
 import pymysql
+pymysql.install_as_MySQLdb()
+import MySQLdb
 
 from bs4 import BeautifulSoup
 
@@ -339,7 +341,8 @@ def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
     :param bigmoda_exc: list
     :return: boolean
     '''
-    conn = pymysql.connect(host='localhost', user='root', passwd='oruri448', db='olegsent_wp8')
+
+    conn = MySQLdb.connect(host='localhost', user='root', passwd='oruri448', db='olegsent_wp8')
     for dress in parse_list:
         if dress not in bigmoda_exc:
             for bm_drs in bigmoda_dresses:
@@ -350,16 +353,18 @@ def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
                             size_to_add.append(size)
                             cur = conn.cursor()
                             query = '''
+                                    START TRANSACTION;
                                        
                                     INSERT INTO `olegsent_wp8`.`wp_posts` (`post_author`, `post_title`, 
-                                                `comment_status`, `ping_status`,`post_parent`, 
-                                                `post_type`, `post_status`)
-                                    VALUES ('53', 'Product # Variation', 
-                                            'closed', 'closed','{0}', 'product_variation', 'publish' );   
-                                      
+                                                `comment_status`, `ping_status`, `post_name`,`post_parent`, 
+                                                `guid`,`post_type`, `post_status`)
+                                    VALUES ('53', '#', 
+                                            'closed', 'closed','1','{0}', '1', 'product_variation', 'publish' );  
+                                    
                                     SET @postsid:= @@IDENTITY;
-                                       
-                                    INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
+                                    
+                                    
+									INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
                                     VALUES (@postsid, '_regular_price', '{1}');
                                     
                                     INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
@@ -417,12 +422,11 @@ def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
                                     VALUES (@postsid, '_downloadable_files', ''); 
                                     
                                     INSERT INTO `olegsent_wp8`.`wp_postmeta` (`post_id`, `meta_key`, `meta_value`)
-                                    VALUES (@postsid, '_variation_description', ''); 
-                                                                    
-                                    '''.format(int(bm_drs[3]), str(bm_drs[2]), str(size))
-                            print(query)
+                                    VALUES (@postsid, '_variation_description', '');
+                                    COMMIT;                           
+                                    '''.format(bm_drs[3], bm_drs[2], size)
+                            # print(query)
                             cur.execute(query)
-                            conn.commit()
                     if len(size_to_add) != 0:
                         with open('добавить удалить размеры.txt', 'a', encoding='utf-8') as file:
                             file.write('Добавить размеры: {}, {}, {}\n'.format(dress[0], size_to_add, dress[2]))
@@ -430,12 +434,15 @@ def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc):
                     for size in bm_drs[1]:
                         if size not in dress[1]:
                             size_to_del.append(size)
-                            cur = conn.cursor()
-                            query = '''DELETE FROM  `olegsent_wp8`.`wp_postmeta` WHERE  `post_id` ={0};
-                                       DELETE FROM  `olegsent_wp8`.`wp_posts` WHERE  `id` ={0}
+                            # cur = conn.cursor()
+                            query = '''
+                                       START TRANSACTION;
+                                       DELETE FROM  `olegsent_wp8`.`wp_postmeta` WHERE  `post_id` ={0};
+                                       DELETE FROM  `olegsent_wp8`.`wp_posts` WHERE  `id` ={0};
+                                       COMMIT;
                                     '''.format(int(bm_drs[4][size]))
-                            cur.execute(query)
-                            conn.commit()
+                            # cur.execute(query)
+                            # conn.commit()
                     if len(size_to_del) != 0:
                         with open('добавить удалить размеры.txt', 'a', encoding='utf-8') as file:
                             file.write('Удалить размеры: {}, {}, {}\n'.format(dress[0], size_to_del, dress[2]))
