@@ -12,6 +12,6 @@ for item in script_block:
     security_id = re.search(r'(?<=security: \')(\w+)', item.text)
     if security_id is not None:
         security = security_id.group(0)
-payload = {'post':{'action': 'woocommerce_add_variation', 'post_id': '13315', 'loop': '6', 'security': security}}
-print(payload)
-session.post('http://localhost/wp-admin/post.php?post=13315&action=edit', payload)
+payload = {'action': 'woocommerce_add_variation', 'post_id': '13315', 'loop': '6', 'security': security}
+r = session.post('http://localhost/wp-admin/admin-ajax.php', payload)
+print(r.text)
