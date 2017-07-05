@@ -4,7 +4,6 @@ from selenium import webdriver
 driver = webdriver.Chrome('chromedriver.exe')
 driver.get('http://localhost/wp-admin/')
 driver.set_page_load_timeout(30)
-# driver.maximize_window()
 driver.find_element_by_id('user_login').send_keys('olegsent')
 time.sleep(1)
 driver.find_element_by_id('user_pass').send_keys('dW#h$x*^EnGOpLhH')
@@ -14,16 +13,16 @@ driver.get('http://localhost/wp-admin/post.php?post=13315&action=edit')
 driver.find_element_by_xpath('//*[@id="woocommerce-product-data"]/div/div/ul/li[5]/a').click()
 driver.find_element_by_xpath('//*[@id="product_attributes"]/div[2]/div[1]/h3').click()
 sizes_input = driver.find_element_by_name('attribute_values[0]')
-
+len_sizes = str(sizes_input.get_attribute('value')).split('|')
 for item in range(len(str(sizes_input.get_attribute('value')))):
     sizes_input.send_keys('\b')
 sizes_input.send_keys('52 | 54 | 56 | 58 | 60 | 62 | 64 | 66 ')
 driver.find_element_by_xpath('//*[@id="product_attributes"]/div[3]/button').click()
-time.sleep(5)
+time.sleep(1)
 driver.find_element_by_xpath('//*[@id="woocommerce-product-data"]/div/div/ul/li[6]/a').click()
 driver.find_element_by_xpath('//*[@id="variable_product_options_inner"]/div[2]/a').click()
 time.sleep(1)
-size_select = driver.find_element_by_xpath('//*[@id="variable_product_options_inner"]/div[3]/div[1]/h3/select')
+size_select = driver.find_element_by_name('attribute_pa_size[' + str(len(len_sizes) - 2) + ']')
 options_size_select = size_select.find_elements_by_tag_name('option')
 for option in options_size_select:
     if option.get_attribute('value') == '66':
