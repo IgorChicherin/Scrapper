@@ -18,11 +18,13 @@ for item in range(len(str(sizes_input.get_attribute('value')))):
     sizes_input.send_keys('\b')
 sizes_input.send_keys('52 | 54 | 56 | 58 | 60 | 62 | 64 | 66 ')
 driver.find_element_by_xpath('//*[@id="product_attributes"]/div[3]/button').click()
-time.sleep(1)
+time.sleep(3)
 driver.find_element_by_xpath('//*[@id="woocommerce-product-data"]/div/div/ul/li[6]/a').click()
 driver.find_element_by_xpath('//*[@id="variable_product_options_inner"]/div[2]/a').click()
-time.sleep(1)
-size_select = driver.find_element_by_name('attribute_pa_size[' + str(len(len_sizes) - 2) + ']')
+time.sleep(3)
+size_selects = driver.find_elements_by_xpath('//*[@id="variable_product_options_inner"]/div[3]/div')
+time.sleep(3)
+size_select = size_selects[0].find_element_by_xpath('//select')
 options_size_select = size_select.find_elements_by_tag_name('option')
 for option in options_size_select:
     if option.get_attribute('value') == '66':
