@@ -499,7 +499,7 @@ if __name__ == '__main__':
         # novita_parse('http://novita-nsk.ru/shop/aktsii/'),
         # novita_parse('http://novita-nsk.ru/index.php?route=product/category&path=1_19'),
         # novita_parse('http://novita-nsk.ru/shop/yubki/'),
-        primalinea_parse('http://primalinea.ru/catalog/category/42/all/0'),
+        # primalinea_parse('http://primalinea.ru/catalog/category/42/all/0'),
         # avigal_parse('http://avigal.ru/dress/'), wisell_parse('https://wisell.ru/catalog/platya/'),
         # krasa_parse('krasa.csv')
          ]
