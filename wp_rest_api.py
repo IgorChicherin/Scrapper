@@ -1,46 +1,33 @@
-# woocommerce REST API
+# woocommerce REST API need woocommerce v3
 # https://woocommerce.github.io/woocommerce-rest-api-docs
 import json
 from woocommerce import API
+
 wcapi = API(
     url='http://localhost',
-    consumer_key='ck_9d39983c92489dcc729ebfb3f2e1baaec25c5744',
-    consumer_secret='cs_854ebadd61e59317ba6e0af3417c29cb830409d7',
-    wc_api='v3'
+    consumer_key='ck_b7888f4363792ea77f8d9a353f0bb58fc5c69696',
+    consumer_secret='cs_a417ab12b28261c9581a713c0d60a8723804141e',
+    wp_api=True,
+    version="wc/v2",
 )
 
-# r = wcapi.get('products/15542')
-# with open('product_dump.json', 'w') as file:
-#     json.dump(r.json(), file, indent=2, ensure_ascii=False)
+data = {
+    'description': '',
+    'regular_price': '2500',
+    'tax_status': 'taxable',
+    'tax_class': '',
+    'attributes': [
+    {
+      "id": 1,
+      "name": "Размер",
+      "option": "52"
+    }
+  ],
+}
 
-# data= {
-#        "status": "publish"
-# }
-#
-# wcapi.put('products/15542', data)
-#
-# for page in range(1, 100):
-#     products = wcapi.get('products/?page=' + str(page))
-#     for product in products.json():
-#         if product['id']:
-#             variations = [size['attributes'][0]['option'] for size in product['variations']]
-#             print([product['id'],product['sku'], variations])
-#         else:
-#             break
-# product_attrs = wcapi.get('products/?attributes=15753').json()
-# print(product_attrs)
-# for variation in product_attrs[0]['variations']:
-#     if variation['attributes'][0]['option'] == '48':
-#         product_attrs[0]['variations'].remove(variation)
-#         product_attrs[0]['attributes'][1]['options'].remove('48')
-#
-# print(wcapi.put('products/attributes/15753', data=product_attrs).json())
+# r = wcapi.post(url, data=data)
 
-# print(wcapi.get('products/15753/variations/15762').json())
-
-# product_attrs = wcapi.get("products/?attributes=15753").json()
-# with open('product_attrs_dump.json', 'w') as file:
-#     json.dump(product_attrs, file, indent=2, ensure_ascii=False)
-# print(products)
-
-wcapi
+r = wcapi.get('products/15542/variations/15829')
+with open('product_vars_dump.json', 'w') as file:
+    json.dump(r.json(), file, indent=2, ensure_ascii=False)
+print(r.json())
