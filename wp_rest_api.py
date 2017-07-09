@@ -1,5 +1,5 @@
 # woocommerce REST API need woocommerce v3
-# https://woocommerce.github.io/woocommerce-rest-api-docs
+# https://woocommerce.github.io/woocommerce-rest-api-docs5
 import json
 from woocommerce import API
 
@@ -20,14 +20,31 @@ data = {
     {
       "id": 1,
       "name": "Размер",
-      "option": "52"
+      "option": "66"
     }
   ],
 }
 
-# r = wcapi.post(url, data=data)
+url = 'products/15542/variations'
 
-r = wcapi.get('products/15542/variations/15829')
-with open('product_vars_dump.json', 'w') as file:
-    json.dump(r.json(), file, indent=2, ensure_ascii=False)
-print(r.json())
+r = wcapi.post(url, data=data)
+
+# r = wcapi.get('products/15542/variations/15829')
+# with open('product_vars_dump.json', 'w') as file:
+#     json.dump(r.json(), file, indent=2, ensure_ascii=False)
+# print(r.json())
+
+# r = wcapi.delete('products/15542/variations/15829')
+
+# attributes = wcapi.get('products/15542/').json()
+# with open('product_attrs_dump.json', 'w') as file:
+#     json.dump(attributes['attributes'], file, indent=2, ensure_ascii=False)
+
+# for attribute in attributes['attributes']:
+#     if attribute['name'] == 'Размер':
+#         attribute['options'].append('68')
+#         print(attribute['options'])
+# with open('product_attrs_dump.json', 'w') as file:
+#     json.dump(attributes, file, indent=2, ensure_ascii=False)
+# r = wcapi.put('products/15542', attributes)
+# print(r.json())
