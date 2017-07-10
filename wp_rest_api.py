@@ -3,15 +3,19 @@
 import json
 from woocommerce import API
 
-#home api keys
+# home api keys
 #  consumer_key='ck_b7888f4363792ea77f8d9a353f0bb58fc5c69696',
 #  consumer_secret='cs_a417ab12b28261c9581a713c0d60a8723804141e',
+
+# work api keys
+# consumer_key = 'ck_4a8ee2b82d4a58f47c93bcc85b1438f2ea4396ca',
+# consumer_secret = 'cs_448b32091b94d7e949690b65bfdc1520cddd0fe5',
 
 
 wcapi = API(
     url='http://localhost',
-    consumer_key='ck_4a8ee2b82d4a58f47c93bcc85b1438f2ea4396ca',
-    consumer_secret='cs_448b32091b94d7e949690b65bfdc1520cddd0fe5',
+    consumer_key='ck_b7888f4363792ea77f8d9a353f0bb58fc5c69696',
+    consumer_secret='cs_a417ab12b28261c9581a713c0d60a8723804141e',
     wp_api=True,
     version="wc/v2",
 )
@@ -54,9 +58,9 @@ wcapi = API(
 # r = wcapi.put('products/15542', attributes)
 # print(r.json())
 
-product = wcapi.get('products/13022').json()
-with open('product_dump.json', 'w') as file:
-    json.dump(product, file, indent=2, ensure_ascii=False)
+# product = wcapi.get('products/13022').json()
+# with open('product_dump.json', 'w') as file:
+#     json.dump(product, file, indent=2, ensure_ascii=False)
 # print(product['categories'])
 
 data = {
@@ -104,3 +108,14 @@ data = {
 # product = wcapi.post('products', data).json()
 # print(wcapi.get('products/15753').json()['attributes'])
 # wcapi.delete('products/15796')
+
+products_list = []
+for page in range(1, 100):
+    products = wcapi.get('products/?page=%s' % (page))
+    for product in products.json():
+        if product['id']:
+            products_list.append([product['sku'], product['id']])
+            print([product['sku'], product['id']])
+
+    products.status_code
+print(products_list)

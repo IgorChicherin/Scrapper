@@ -452,11 +452,9 @@ def del_item(goods_data):
     bm_names_dress = [i[0] for i in bigmoda_pages[0]]
     bm_names_blouse = [i[0] for i in bigmoda_pages[1]]
     bm_names_exc = [i[0] for i in bigmoda_pages[2]]
+
     for bm_dress in bm_names_dress:
         if bm_dress not in names and bm_dress not in bm_names_exc:
-            data = {
-
-            }
             with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
                 file.write('Удалить карточку: {}\n'.format(bm_dress))
     for bm_blouse in bm_names_blouse:
@@ -465,6 +463,11 @@ def del_item(goods_data):
                 file.write('Удалить карточку: {}\n'.format(bm_blouse))
     for name in goods_data:
         if (name not in bm_names_dress or name not in bm_names_blouse) and name not in bm_names_exc:
+            if name[0].split(' ')[0] == 'Краса': chart_id = '13252'
+            elif name[0].split(' ')[0] == 'Новита':  chart_id = '3046'
+            elif name[0].split(' ')[0] == 'Авигаль': chart_id = '10850'
+            elif name[0].split(' ')[0] == 'Прима':  chart_id = '6381'
+            else: chart_id = '3769'
             data = {
                 'name': '%s %s' % (name[3], name[0]),
                 'type': 'variable',
@@ -475,9 +478,11 @@ def del_item(goods_data):
                 'categories': [
                     {
                         'slug': '%s' % ('platya-bolshih-razmerov' if name[3] == 'Платье' or
-                                                                     name[3] == 'Костюм' else 'bluzki-bolshih-razmerov'),
+                                                                     name[
+                                                                         3] == 'Костюм' else 'bluzki-bolshih-razmerov'),
                         'name': '%s' % ('Платья больших размеров' if name[3] == 'Платье' or
-                                                                     name[3] == 'Костюм' else 'Блузки больших размеров'),
+                                                                     name[
+                                                                         3] == 'Костюм' else 'Блузки больших размеров'),
                         'id': '%i' % (11 if name[3] == 'Платье' or name[3] == 'Костюм' else 16)
                     }
                 ],
@@ -507,24 +512,47 @@ def del_item(goods_data):
                         'variation': False
                     }
 
+                ],
+                'meta_data': [
+                    {
+                        'key': 'prod-chart',
+                        'value': '%s' % (chart_id),
+                    }
                 ]
             }
             product = wcapi.post('products', data).json()
-            for size in name[1]:
-                data = {
-                    'description': '',
-                    'regular_price': '%s' % (name[2]),
-                    'tax_status': 'taxable',
-                    'tax_class': '',
-                    'attributes': [
-                        {
-                            "id": 1,
-                            "name": "Размер",
-                            "option": size
-                        }
-                    ],
-                }
-                wcapi.post('products/%s/variations' % (product['id']), data)
+            if product['message'] == 'Неверный или дублированный артикул.':
+                for size in name[1]:
+                    data = {
+                        'description': '',
+                        'regular_price': '%s' % (name[2]),
+                        'tax_status': 'taxable',
+                        'tax_class': '',
+                        'attributes': [
+                            {
+                                "id": 1,
+                                "name": "Размер",
+                                "option": size
+                            }
+                        ],
+                    }
+                    wcapi.post('products/%s/variations' % (product['data']['resource_id']), data)
+            else:
+                for size in name[1]:
+                    data = {
+                        'description': '',
+                        'regular_price': '%s' % (name[2]),
+                        'tax_status': 'taxable',
+                        'tax_class': '',
+                        'attributes': [
+                            {
+                                "id": 1,
+                                "name": "Размер",
+                                "option": size
+                            }
+                        ],
+                    }
+                    wcapi.post('products/%s/variations' % (product['id']), data)
             with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
                 file.write('Добавить карточку: {} {} {}\n'.format(name[0], name[1], name[2]))
     return goods_data
@@ -565,8 +593,8 @@ if __name__ == '__main__':
 
     wcapi = API(
         url='http://localhost',
-        consumer_key='ck_beddec66bcfa5c091cf41b070048c118611ecc72',
-        consumer_secret='cs_0241fad5f6c2d5e96e5bc321f146b1b3a85cbe5a',
+        consumer_key='ck_b7888f4363792ea77f8d9a353f0bb58fc5c69696',
+        consumer_secret='cs_a417ab12b28261c9581a713c0d60a8723804141e',
         wp_api=True,
         version="wc/v2",
     )
