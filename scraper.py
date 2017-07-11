@@ -455,7 +455,7 @@ def del_item(goods_data, wcapi_conn):
     bm_names_exc = [i[0] for i in bigmoda_pages[2]]
 
     for bm_dress in bigmoda_pages[0]:
-        if bm_dress[0] not in names and bm_dress not in bm_names_exc:
+        if bm_dress[0] not in names and bm_dress[0] not in bm_names_exc:
             for size, size_id in bm_dress[4].items():
                 wcapi_conn.delete('products/%s/variations/%s' % (bm_dress[3], size_id))
             data = {
@@ -465,7 +465,7 @@ def del_item(goods_data, wcapi_conn):
             with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
                 file.write('Удалить карточку: {}\n'.format(bm_dress[0]))
     for bm_blouse in bigmoda_pages[1]:
-        if bm_blouse[0] not in names:
+        if bm_blouse[0] not in names and bm_blouse[0] not in bm_names_exc :
             for size, size_id in bm_blouse[4].items():
                 wcapi_conn.delete('products/%s/variations/%s' % (bm_blouse[3], size_id))
             data = {
