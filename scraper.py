@@ -475,7 +475,7 @@ def del_item(goods_data, wcapi_conn):
             with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
                 file.write('Удалить карточку: {}\n'.format(bm_blouse[0]))
     for name in goods_data:
-        if (name not in bm_names_dress or name not in bm_names_blouse) and name not in bm_names_exc:
+        if (name not in bm_names_dress and name not in bm_names_blouse) and name not in bm_names_exc:
             if name[0].split(' ')[0] == 'Краса':
                 chart_id = '13252'
             elif name[0].split(' ')[0] == 'Новита':
