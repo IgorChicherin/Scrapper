@@ -112,7 +112,8 @@ def primalinea_parse(url):
         data['type'] = data['name'].split(' ')[1].capitalize() if len(data['name'].split(' ')) > 2 and \
                                                                   'new' not in data['name'].split(' ') \
             else data['name'].split(' ')[0].capitalize()
-        if data['type'] == 'Блуза' or data['type'] == 'Кардиган' or data['type'] == 'Туника' or data['type'] == 'Платье':
+        if data['type'] == 'Блуза' or data['type'] == 'Кардиган' or data['type'] == 'Туника' or data[
+            'type'] == 'Платье':
             data['name'] = data['name'].split(' ')[2] if len(data['name'].split(' ')) > 2 and 'new' not in data[
                 'name'].split(' ') else data['name'].split(' ')[1]
             price = soup.find('div', attrs={'id': 'catalog-item-description'})
@@ -122,7 +123,7 @@ def primalinea_parse(url):
             data['sizes_list'] = [item.text for item in data['sizes_list']]
             # print('Прима ' + data['name'].lower(), data['sizes_list'], data['price'], data['type'])
             result.append(['Прима ' + data['name'], data['sizes_list'], data['price'], data['type']])
-            time.sleep(0.1)
+        time.sleep(0.1)
         i += 1
         printProgressBar(i, l, prefix='Primalinea Parsing:', suffix='Complete', length=50)
     return result
@@ -178,7 +179,7 @@ def avigal_parse(url):
             for item in sizes_list:
                 if r':n\a' not in item['title']:
                     data['sizes_list'].append(item.text.strip())
-            print('Авигаль ' + data['name'], data['sizes_list'], data['price'], data['type'])
+            # print('Авигаль ' + data['name'], data['sizes_list'], data['price'], data['type'])
             result.append(['Авигаль ' + data['name'], data['sizes_list'], data['price'], data['type']])
             time.sleep(0.1)
             i += 1
@@ -354,60 +355,6 @@ def bigmoda_parse(url):
     return result
 
 
-def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc, wcapi_conn):
-    '''
-    Compare avaliability sizes supplier and site customer
-    :param parse_list: list
-    :param bigmoda_dresses: list
-    :param bigmoda_exc: list
-    :return: boolean
-    '''
-    for dress in parse_list:
-        if dress not in bigmoda_exc:
-            for bm_drs in bigmoda_dresses:
-                product_id = bm_drs[3]
-                product_size_id = bm_drs[4]
-                if dress[0] == bm_drs[0]:
-                    size_to_add = []
-                    for size in dress[1]:
-                        if size not in bm_drs[1]:
-                            size_to_add.append(size)
-                            data = {
-                                'description': '',
-                                'regular_price': str(dress[2]),
-                                'tax_status': 'taxable',
-                                'tax_class': '',
-                                'attributes': [
-                                    {
-                                        "id": 1,
-                                        "name": "Размер",
-                                        "option": size
-                                    }
-                                ],
-                            }
-                            attributes = wcapi_conn.get('products/' + product_id).json()
-                            for attribute in attributes['attributes']:
-                                if attribute['name'] == 'Размер':
-                                    if size not in attribute['options']:
-                                        attribute['options'].append(size)
-                                        wcapi_conn.put('products/' + product_id, attributes)
-                                        wcapi_conn.post('products/' + product_id + '/variations', data)
-                                    else:
-                                        wcapi_conn.post('products/' + product_id + '/variations', data)
-                    if len(size_to_add) != 0:
-                        with open('добавить удалить размеры.txt', 'a', encoding='utf-8') as file:
-                            file.write('Добавить размеры: {}, {}, {}\n'.format(dress[0], size_to_add, dress[2]))
-                    size_to_del = []
-                    for size in bm_drs[1]:
-                        if size not in dress[1]:
-                            size_to_del.append(size)
-                            wcapi_conn.delete('products/' + product_id + '/variations/' + product_size_id[size])
-                    if len(size_to_del) != 0:
-                        with open('добавить удалить размеры.txt', 'a', encoding='utf-8') as file:
-                            file.write('Удалить размеры: {}, {}, {}\n'.format(dress[0], size_to_del, dress[2]))
-    return True
-
-
 def krasa_parse(file_name):
     '''
     Parsing goods from krasa.csv
@@ -439,6 +386,63 @@ def krasa_parse(file_name):
     return result
 
 
+def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc, wcapi_conn):
+    '''
+    Compare avaliability sizes supplier and site customer
+    :param parse_list: list
+    :param bigmoda_dresses: list
+    :param bigmoda_exc: list
+    :return: boolean
+    '''
+    for dress in parse_list:
+        if dress not in bigmoda_exc:
+            for bm_drs in bigmoda_dresses:
+                product_id = bm_drs[3]
+                product_size_id = bm_drs[4]
+                if dress[0] == bm_drs[0]:
+                    size_to_add = []
+                    for size in dress[1]:
+                        if size not in bm_drs[1]:
+                            size_to_add.append(size)
+                            data = {
+                                'description': '',
+                                'regular_price': str(dress[2]),
+                                'tax_status': 'taxable',
+                                'tax_class': '',
+                                'attributes': [
+                                    {
+                                        "id": 1,
+                                        "name": "Размер",
+                                        "option": size
+                                    }
+                                ],
+                            }
+                            attributes = wcapi_conn.get('products/%s' % (product_id)).json()
+                            for attribute in attributes['attributes']:
+                                if attribute['name'] == 'Размер':
+                                    if size not in attribute['options']:
+                                        attribute['options'].append(size)
+                                        wcapi_conn.put('products/%s' % (product_id), attributes)
+                                        wcapi_conn.post('products/%s/variations' % (product_id), data)
+                                    else:
+                                        wcapi_conn.post('products/%s/variations' % (product_id), data)
+                    if len(size_to_add) != 0:
+                        with open('добавить удалить размеры.txt', 'a', encoding='utf-8') as file:
+                            file.write('Добавить размеры: {}, {}, {}\n'.format(dress[0], size_to_add, dress[2]))
+                    size_to_del = []
+                    for size in bm_drs[1]:
+                        if size not in dress[1]:
+                            size_to_del.append(size)
+                            try:
+                                wcapi_conn.delete('products/%s/variations/%s' % (product_id, product_size_id[size]))
+                            except KeyError:
+                                print('Ошибка: С товаром %s с размером %s что то не так' % (bm_drs[0], size))
+                    if len(size_to_del) != 0:
+                        with open('добавить удалить размеры.txt', 'a', encoding='utf-8') as file:
+                            file.write('Удалить размеры: {}, {}, {}\n'.format(dress[0], size_to_del, dress[2]))
+    return True
+
+
 def del_item(goods_data, wcapi_conn):
     '''
     Check availability goods on Bigmoda and supplier  
@@ -455,7 +459,7 @@ def del_item(goods_data, wcapi_conn):
             for size, size_id in bm_dress[4].items():
                 wcapi_conn.delete('products/%s/variations/%s' % (bm_dress[3], size_id))
             data = {
-                    'status': 'private'
+                'status': 'private'
             }
             wcapi_conn.put('products/%s' % (bm_dress[3]), data)
             with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
@@ -472,11 +476,16 @@ def del_item(goods_data, wcapi_conn):
                 file.write('Удалить карточку: {}\n'.format(bm_blouse[0]))
     for name in goods_data:
         if (name not in bm_names_dress or name not in bm_names_blouse) and name not in bm_names_exc:
-            if name[0].split(' ')[0] == 'Краса': chart_id = '13252'
-            elif name[0].split(' ')[0] == 'Новита':  chart_id = '3046'
-            elif name[0].split(' ')[0] == 'Авигаль': chart_id = '10850'
-            elif name[0].split(' ')[0] == 'Прима':  chart_id = '6381'
-            else: chart_id = '3769'
+            if name[0].split(' ')[0] == 'Краса':
+                chart_id = '13252'
+            elif name[0].split(' ')[0] == 'Новита':
+                chart_id = '3046'
+            elif name[0].split(' ')[0] == 'Авигаль':
+                chart_id = '10850'
+            elif name[0].split(' ')[0] == 'Прима':
+                chart_id = '6381'
+            else:
+                chart_id = '3769'
             data = {
                 'name': '%s %s' % (name[3], name[0]),
                 'type': 'variable',
@@ -609,14 +618,14 @@ if __name__ == '__main__':
     )
 
     dress_pages = [novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/'),
-        novita_parse('http://novita-nsk.ru/shop/aktsii/'),
-        novita_parse('http://novita-nsk.ru/index.php?route=product/category&path=1_19'),
-        novita_parse('http://novita-nsk.ru/shop/yubki/'),
-        primalinea_parse('http://primalinea.ru/catalog/category/42/all/0'),
-        avigal_parse('http://avigal.ru/dress/'),
-        wisell_parse('https://wisell.ru/catalog/platya/'),
-        krasa_parse('krasa.csv')
-    ]
+                   novita_parse('http://novita-nsk.ru/shop/aktsii/'),
+                   novita_parse('http://novita-nsk.ru/index.php?route=product/category&path=1_19'),
+                   novita_parse('http://novita-nsk.ru/shop/yubki/'),
+                   primalinea_parse('http://primalinea.ru/catalog/category/42/all/0'),
+                   avigal_parse('http://avigal.ru/dress/'),
+                   wisell_parse('https://wisell.ru/catalog/platya/'),
+                   krasa_parse('krasa.csv')
+                   ]
     blouse_pages = [novita_parse('http://novita-nsk.ru/shop/bluzy/'),
                     primalinea_parse('http://primalinea.ru/catalog/category/43/all/0'),
                     avigal_parse('http://avigal.ru/blouse-tunic/'),
