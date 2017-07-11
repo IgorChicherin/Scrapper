@@ -539,23 +539,24 @@ def del_item(goods_data, wcapi_conn):
                 ]
             }
             product = wcapi.post('products', data).json()
-            if product['message'] == 'Неверный или дублированный артикул.':
-                for size in name[1]:
-                    data = {
-                        'description': '',
-                        'regular_price': '%s' % (name[2]),
-                        'tax_status': 'taxable',
-                        'tax_class': '',
-                        'attributes': [
-                            {
-                                "id": 1,
-                                "name": "Размер",
-                                "option": size
-                            }
-                        ],
-                    }
-                    wcapi.post('products/%s/variations' % (product['data']['resource_id']), data)
-            else:
+            try:
+                if product['message'] == 'Неверный или дублированный артикул.':
+                    for size in name[1]:
+                        data = {
+                            'description': '',
+                            'regular_price': '%s' % (name[2]),
+                            'tax_status': 'taxable',
+                            'tax_class': '',
+                            'attributes': [
+                                {
+                                    "id": 1,
+                                    "name": "Размер",
+                                    "option": size
+                                }
+                            ],
+                        }
+                        wcapi.post('products/%s/variations' % (product['data']['resource_id']), data)
+            except:
                 for size in name[1]:
                     data = {
                         'description': '',
@@ -611,8 +612,8 @@ if __name__ == '__main__':
 
     wcapi = API(
         url='http://localhost',
-        consumer_key='ck_cfe8f7523b8ceedfa0688d5a0108500ae97a95ff',
-        consumer_secret='cs_5f13cb822c40ef40daca546eb6d7d7f193768b28',
+        consumer_key='ck_045e0d5bd547177406c7d3634f0e6a6772c2a0b0',
+        consumer_secret='cs_df0cd372145b7c13f63d6a07b2c6eb4f4f07c2c5',
         wp_api=True,
         version="wc/v2",
     )
