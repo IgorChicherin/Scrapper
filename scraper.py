@@ -329,21 +329,19 @@ def bigmoda_parse(url):
         for item in data['item_links']:
             r = requests.get(item)
             soup = BeautifulSoup(r.text, 'lxml')
-            try:
-                data['name'] = soup.find('span', {'class': 'sku'}).text
-                data['price'] = soup.find('p', {'class': 'price'}).span.text.split('.')[0].replace(',', '')
-                data['sizes_list'] = soup.find('div', {'class': 'ivpa_attribute'}, {'class': 'ivpa_text'})
-                data['sizes_list'] = data['sizes_list'].find_all('span', {'class': 'ivpa_term'})
-                data['sizes_list'] = [item.text.strip() for item in data['sizes_list']]
-                data['product_id'] = re.search(r'(\d+)', soup.find('div', attrs={'class': 'product'})['id']).group(0)
-                sizes_id = re.findall(r'(?<="variation_id":)(\d+)',
-                                      soup.find('div', attrs={'id': 'ivpa-content'})['data-variations'])
+            data['name'] = soup.find('span', {'class': 'sku'}).text
+            data['price'] = soup.find('p', {'class': 'price'}).span.text.split('.')[0].replace(',', '')
+            data['sizes_list'] = soup.find('div', {'class': 'ivpa_attribute'}, {'class': 'ivpa_text'})
+            data['sizes_list'] = data['sizes_list'].find_all('span', {'class': 'ivpa_term'})
+            data['sizes_list'] = [item.text.strip() for item in data['sizes_list']]
+            data['product_id'] = re.search(r'(\d+)', soup.find('div', attrs={'class': 'product'})['id']).group(0)
+            sizes_id = re.findall(r'(?<="variation_id":)(\d+)',
+                                  soup.find('div', attrs={'id': 'ivpa-content'})['data-variations'])
 
-                sizes_key = re.findall(r'(?<="attribute_pa_size":)"(\d+)"',
-                                       soup.find('div', attrs={'id': 'ivpa-content'})['data-variations'])
-                data['product_size_id'] = dict(zip(sizes_key, sizes_id))
-            except:
-                print(item)
+            sizes_key = re.findall(r'(?<="attribute_pa_size":)"(\d+)"',
+                                   soup.find('div', attrs={'id': 'ivpa-content'})['data-variations'])
+            data['product_size_id'] = dict(zip(sizes_key, sizes_id))
+
             # print([data['name'], data['sizes_list'], data['price'], data['product_id'], data['product_size_id']])
             result.append(
                 [data['name'], data['sizes_list'], data['price'], data['product_id'], data['product_size_id']])
@@ -475,7 +473,7 @@ def del_item(goods_data, wcapi_conn):
             with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
                 file.write('Удалить карточку: {}\n'.format(bm_blouse[0]))
     for name in goods_data:
-        if (name not in bm_names_dress and name not in bm_names_blouse) and name not in bm_names_exc:
+        if (name[0] not in bm_names_dress and name[0] not in bm_names_blouse) and name[0] not in bm_names_exc:
             if name[0].split(' ')[0] == 'Краса':
                 chart_id = '13252'
             elif name[0].split(' ')[0] == 'Новита':
@@ -539,8 +537,7 @@ def del_item(goods_data, wcapi_conn):
                 ]
             }
             product = wcapi.post('products', data).json()
-            try:
-                if product['message'] == 'Неверный или дублированный артикул.':
+            if 'message' in product and product['message'] == 'Неверный или дублированный артикул.':
                     for size in name[1]:
                         data = {
                             'description': '',
@@ -556,7 +553,8 @@ def del_item(goods_data, wcapi_conn):
                             ],
                         }
                         wcapi.post('products/%s/variations' % (product['data']['resource_id']), data)
-            except:
+                #TODO: Нужно опубликовать имеющийся товар
+            else:
                 for size in name[1]:
                     data = {
                         'description': '',
