@@ -552,8 +552,8 @@ def del_item(goods_data, wcapi_conn):
                                 }
                             ],
                         }
-                        wcapi.post('products/%s/variations' % (product['data']['resource_id']), data)
-                #TODO: Нужно опубликовать имеющийся товар
+                        wcapi_conn.post('products/%s/variations' % (product['data']['resource_id']), data).json()
+                    wcapi_conn.put('products/%s' % (product['data']['resource_id']), data={'status': 'publish'}).json()
             else:
                 for size in name[1]:
                     data = {
