@@ -467,7 +467,8 @@ def del_item(goods_data, wcapi_conn):
             for size, size_id in bm_blouse[4].items():
                 wcapi_conn.delete('products/%s/variations/%s' % (bm_blouse[3], size_id))
             data = {
-                'status': 'private'
+                'status': 'private',
+                'catalog_visibility': 'hidden'
             }
             wcapi_conn.put('products/%s' % (bm_blouse[3]), data)
             with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
@@ -488,7 +489,7 @@ def del_item(goods_data, wcapi_conn):
                 'name': '%s %s' % (name[3], name[0]),
                 'type': 'variable',
                 'status': 'private',
-                'catalog_visibility': 'visible',
+                'catalog_visibility': 'hidden',
                 'sku': '%s' % (name[0]),
                 'regular_price': '%s' % (name[2]),
                 'categories': [
@@ -554,22 +555,22 @@ def del_item(goods_data, wcapi_conn):
                         }
                         wcapi_conn.post('products/%s/variations' % (product['data']['resource_id']), data).json()
                     wcapi_conn.put('products/%s' % (product['data']['resource_id']), data={'status': 'publish'}).json()
-            else:
-                for size in name[1]:
-                    data = {
-                        'description': '',
-                        'regular_price': '%s' % (name[2]),
-                        'tax_status': 'taxable',
-                        'tax_class': '',
-                        'attributes': [
-                            {
-                                "id": 1,
-                                "name": "Размер",
-                                "option": size
-                            }
-                        ],
-                    }
-                    wcapi.post('products/%s/variations' % (product['id']), data)
+            # else:
+            #     for size in name[1]:
+            #         data = {
+            #             'description': '',
+            #             'regular_price': '%s' % (name[2]),
+            #             'tax_status': 'taxable',
+            #             'tax_class': '',
+            #             'attributes': [
+            #                 {
+            #                     "id": 1,
+            #                     "name": "Размер",
+            #                     "option": size
+            #                 }
+            #             ],
+            #         }
+            #         wcapi.post('products/%s/variations' % (product['id']), data)
             with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
                 file.write('Добавить карточку: {} {} {}\n'.format(name[0], name[1], name[2]))
     return goods_data
