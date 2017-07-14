@@ -107,6 +107,14 @@ def primalinea_parse(url):
         r = session.get(link)
         soup = BeautifulSoup(r.text.encode('utf-8'), 'lxml')
         data = {}
+        try:
+            data['is_new'] = soup.find('div', attrs={'id': 'catalog-item-tags'}).find('a').text.strip()
+            if data['is_new'] == 'Новинки':
+                data['is_new'] = True
+            else:
+                data['is_new'] = False
+        except AttributeError:
+            data['is_new'] = False
         data['name'] = soup.h1.text.strip()
         data['type'] = data['name'].split(' ')[1].capitalize() if len(data['name'].split(' ')) > 2 and \
                                                                   'new' not in data['name'].split(' ') \
@@ -121,7 +129,7 @@ def primalinea_parse(url):
             data['sizes_list'] = soup.find_all('option')
             data['sizes_list'] = [item.text for item in data['sizes_list']]
             # print('Прима ' + data['name'].lower(), data['sizes_list'], data['price'], data['type'])
-            result.append(['Прима ' + data['name'], data['sizes_list'], data['price'], data['type']])
+            result.append(['Прима ' + data['name'], data['sizes_list'], data['price'], data['type'], data['is_new']])
         time.sleep(0.1)
         i += 1
         printProgressBar(i, l, prefix='Primalinea Parsing:', suffix='Complete', length=50)
@@ -157,6 +165,11 @@ def avigal_parse(url):
     for link in data['paginaton_url']:
         r = session.get(link)
         soup = BeautifulSoup(r.text, 'lxml')
+        data['is_new'] = soup.find('div', {'class': 'sticker-novelty'})
+        if data['is_new']:
+            data['is_new'] = True
+        else:
+            data['is_new'] = False
         items_link_list = soup.find_all('div', {'class': 'product-about'})
         items_link_list = [item.find('div', attrs={'class': 'name'}).a.get('href') for item in items_link_list]
         i = 0
@@ -179,7 +192,7 @@ def avigal_parse(url):
                 if r':n\a' not in item['title']:
                     data['sizes_list'].append(item.text.strip())
             # print('Авигаль ' + data['name'], data['sizes_list'], data['price'], data['type'])
-            result.append(['Авигаль ' + data['name'], data['sizes_list'], data['price'], data['type']])
+            result.append(['Авигаль ' + data['name'], data['sizes_list'], data['price'], data['type'], data['is_new']])
             time.sleep(0.1)
             i += 1
             printProgressBar(i, l, prefix='Avigal Parsing:',
@@ -221,6 +234,14 @@ def wisell_parse(url):
     for page in data['paginaton_url']:
         r = requests.get(page, headers=headers)
         soup = BeautifulSoup(r.text, 'lxml')
+        try:
+            data['is_new'] = soup.find('span', {'class': 'label_item'}).text
+            if data['is_new'] and data['is_new'] == 'Новинка':
+                data['is_new'] = True
+            else:
+                data['is_new'] = False
+        except AttributeError:
+            data['is_new'] = False
         data['item_links'] = soup.find_all('a', {'class': 'item_title'})
         data['item_links'] = ['https://wisell.ru' + link.get('href') for link in data['item_links']]
         i = 0
@@ -279,7 +300,8 @@ def wisell_parse(url):
                             data['sizes_list'].append(size)
                 data['sizes_list'].sort()
                 # print(['Визель ' + data['name'], data['sizes_list'], data['price'], data['type']])
-                result.append(['Визель ' + data['name'], data['sizes_list'], data['price'], data['type']])
+                result.append(
+                    ['Визель ' + data['name'], data['sizes_list'], data['price'], data['type'], data['is_new']])
             elif len(data['small_sizes']) == 1:
                 sizes_list = []
                 for size in data['sizes_list']:
@@ -288,7 +310,7 @@ def wisell_parse(url):
                 if len(sizes_list) != 0:
                     sizes_list.sort()
                     # print(['Визель ' + data['name'], sizes_list, data['price'], data['type']])
-                    result.append(['Визель ' + data['name'], sizes_list, data['price'], data['type']])
+                    result.append(['Визель ' + data['name'], sizes_list, data['price'], data['type'], data['is_new']])
             time.sleep(0.1)
             i += 1
             printProgressBar(i, l, prefix='Wisell Parsing:',
@@ -474,7 +496,8 @@ def del_item(goods_data, wcapi_conn):
             with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
                 file.write('Удалить карточку: {}\n'.format(bm_blouse[0]))
     for name in goods_data:
-        if (name[0] not in bm_names_dress and name[0] not in bm_names_blouse) and name[0] not in bm_names_exc:
+        if (name[0] not in bm_names_dress and name[0] not in bm_names_blouse) and name[0] not in bm_names_exc and name[
+            4] is True:
             if name[0].split(' ')[0] == 'Краса':
                 chart_id = '13252'
             elif name[0].split(' ')[0] == 'Новита':
@@ -556,22 +579,22 @@ def del_item(goods_data, wcapi_conn):
                     wcapi_conn.post('products/%s/variations' % (product['data']['resource_id']), data).json()
                 wcapi_conn.put('products/%s' % (product['data']['resource_id']),
                                data={'status': 'publish', 'catalog_visibility': 'visible'}).json()
-            # else:
-            #     for size in name[1]:
-            #         data = {
-            #             'description': '',
-            #             'regular_price': '%s' % (name[2]),
-            #             'tax_status': 'taxable',
-            #             'tax_class': '',
-            #             'attributes': [
-            #                 {
-            #                     "id": 1,
-            #                     "name": "Размер",
-            #                     "option": size
-            #                 }
-            #             ],
-            #         }
-            #         wcapi.post('products/%s/variations' % (product['id']), data)
+            else:
+                for size in name[1]:
+                    data = {
+                        'description': '',
+                        'regular_price': '%s' % (name[2]),
+                        'tax_status': 'taxable',
+                        'tax_class': '',
+                        'attributes': [
+                            {
+                                "id": 1,
+                                "name": "Размер",
+                                "option": size
+                            }
+                        ],
+                    }
+                    wcapi.post('products/%s/variations' % (product['id']), data)
             with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
                 file.write('Добавить карточку: {} {} {}\n'.format(name[0], name[1], name[2]))
     return goods_data
