@@ -457,13 +457,14 @@ def del_item(goods_data, wcapi_conn):
             for size, size_id in bm_dress[4].items():
                 wcapi_conn.delete('products/%s/variations/%s' % (bm_dress[3], size_id))
             data = {
-                'status': 'private'
+                'status': 'private',
+                'catalog_visibility': 'hidden'
             }
             wcapi_conn.put('products/%s' % (bm_dress[3]), data)
             with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
                 file.write('Удалить карточку: {}\n'.format(bm_dress[0]))
     for bm_blouse in bigmoda_pages[1]:
-        if bm_blouse[0] not in names and bm_blouse[0] not in bm_names_exc :
+        if bm_blouse[0] not in names and bm_blouse[0] not in bm_names_exc:
             for size, size_id in bm_blouse[4].items():
                 wcapi_conn.delete('products/%s/variations/%s' % (bm_blouse[3], size_id))
             data = {
@@ -539,22 +540,23 @@ def del_item(goods_data, wcapi_conn):
             }
             product = wcapi.post('products', data).json()
             if 'message' in product and product['message'] == 'Неверный или дублированный артикул.':
-                    for size in name[1]:
-                        data = {
-                            'description': '',
-                            'regular_price': '%s' % (name[2]),
-                            'tax_status': 'taxable',
-                            'tax_class': '',
-                            'attributes': [
-                                {
-                                    "id": 1,
-                                    "name": "Размер",
-                                    "option": size
-                                }
-                            ],
-                        }
-                        wcapi_conn.post('products/%s/variations' % (product['data']['resource_id']), data).json()
-                    wcapi_conn.put('products/%s' % (product['data']['resource_id']), data={'status': 'publish'}).json()
+                for size in name[1]:
+                    data = {
+                        'description': '',
+                        'regular_price': '%s' % (name[2]),
+                        'tax_status': 'taxable',
+                        'tax_class': '',
+                        'attributes': [
+                            {
+                                "id": 1,
+                                "name": "Размер",
+                                "option": size
+                            }
+                        ],
+                    }
+                    wcapi_conn.post('products/%s/variations' % (product['data']['resource_id']), data).json()
+                wcapi_conn.put('products/%s' % (product['data']['resource_id']),
+                               data={'status': 'publish', 'catalog_visibility': 'visible'}).json()
             # else:
             #     for size in name[1]:
             #         data = {
