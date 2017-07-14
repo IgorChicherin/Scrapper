@@ -78,7 +78,7 @@ def novita_parse(url):
                 # print(
                 # ['Новита ' + data['name'] + ' ' + str(key), data['color_size'][key], data['price'], data['type']])
                 result.append(
-                    ['Новита ' + data['name'] + ' ' + str(key), data['color_size'][key], data['price'], data['type']])
+                    ['Новита ' + data['name'] + ' ' + str(key), data['color_size'][key], data['price'], data['type'], True])
         time.sleep(0.1)
         i += 1
         printProgressBar(i, l, prefix='Novita Parsing:', suffix='Complete', length=50)
@@ -399,7 +399,7 @@ def krasa_parse(file_name):
                     elif item_type == 'Р' or item_type == 'РБ':
                         item_type = 'Блузка'
                     # print([name, sizes_list, price, item_type])
-                    result.append([name, sizes_list, price, item_type])
+                    result.append([name, sizes_list, price, item_type, True])
                 except AttributeError:
                     continue
     return result
