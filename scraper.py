@@ -166,11 +166,6 @@ def avigal_parse(url):
     for link in data['paginaton_url']:
         r = session.get(link)
         soup = BeautifulSoup(r.text, 'lxml')
-        data['is_new'] = soup.find('div', {'class': 'sticker-novelty'})
-        if data['is_new']:
-            data['is_new'] = True
-        else:
-            data['is_new'] = False
         items_link_list = soup.find_all('div', {'class': 'product-about'})
         items_link_list = [item.find('div', attrs={'class': 'name'}).a.get('href') for item in items_link_list]
         i = 0
@@ -180,6 +175,11 @@ def avigal_parse(url):
         for link in items_link_list:
             r = session.get(link)
             soup = BeautifulSoup(r.text, 'lxml')
+            data['is_new'] = soup.find('div', {'class': 'sticker-novelty'})
+            if data['is_new']:
+                data['is_new'] = True
+            else:
+                data['is_new'] = False
             data['price'] = soup.find('span', attrs={'class': 'micro-price', 'itemprop': 'price'})
             data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
             data['price'] = int(data['price'].group(0)) * 2
@@ -235,14 +235,6 @@ def wisell_parse(url):
     for page in data['paginaton_url']:
         r = requests.get(page, headers=headers)
         soup = BeautifulSoup(r.text, 'lxml')
-        try:
-            data['is_new'] = soup.find('span', {'class': 'label_item'}).text
-            if data['is_new'] and data['is_new'] == 'Новинка':
-                data['is_new'] = True
-            else:
-                data['is_new'] = False
-        except AttributeError:
-            data['is_new'] = False
         data['item_links'] = soup.find_all('a', {'class': 'item_title'})
         data['item_links'] = ['https://wisell.ru' + link.get('href') for link in data['item_links']]
         i = 0
@@ -252,6 +244,14 @@ def wisell_parse(url):
         for item_link in data['item_links']:
             r = requests.get(item_link, headers=headers)
             soup = BeautifulSoup(r.text, 'lxml')
+            try:
+                data['is_new'] = soup.find('span', {'class': 'label_item'}).text
+                if data['is_new'] and data['is_new'] == 'Новинка':
+                    data['is_new'] = True
+                else:
+                    data['is_new'] = False
+            except AttributeError:
+                data['is_new'] = False
             data['name'] = soup.find('li', attrs={'class': 'item_lost'})
             data['name'] = data['name'].span.text
             data['type'] = soup.find('h1').text.split(' ')[0]
