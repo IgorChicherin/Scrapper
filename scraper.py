@@ -79,7 +79,7 @@ def novita_parse(url):
                 # ['Новита ' + data['name'] + ' ' + str(key), data['color_size'][key], data['price'], data['type']])
                 result.append(
                     ['Новита ' + data['name'] + ' ' + str(key), data['color_size'][key], data['price'], data['type'],
-                     True])
+                     False])
         time.sleep(0.1)
         i += 1
         printProgressBar(i, l, prefix='Novita Parsing:', suffix='Complete', length=50)
