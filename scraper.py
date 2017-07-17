@@ -1,9 +1,10 @@
-import requests
 import os
 import re
 import time
 import sys
 import csv
+
+import requests
 
 from bs4 import BeautifulSoup
 from woocommerce import API
@@ -78,7 +79,7 @@ def novita_parse(url):
                 # print(
                 # ['Новита ' + data['name'] + ' ' + str(key), data['color_size'][key], data['price'], data['type']])
                 result.append(
-                    ['Новита ' + data['name'] + ' ' + str(key), data['color_size'][key], data['price'], data['type'], True])
+                    ['Новита ' + data['name'] + ' ' + str(key), data['color_size'][key], data['price'], data['type'], False])
         time.sleep(0.1)
         i += 1
         printProgressBar(i, l, prefix='Novita Parsing:', suffix='Complete', length=50)
@@ -633,10 +634,16 @@ if __name__ == '__main__':
         if os.path.exists(file):
             os.remove(file)
 
+    with open('keys.txt', 'r') as file:
+        keys = [line.strip() for line in file]
+
+    consumer_key = keys[0]
+    consumer_secret = keys[1]
+
     wcapi = API(
-        url='http://localhost',
-        consumer_key='ck_045e0d5bd547177406c7d3634f0e6a6772c2a0b0',
-        consumer_secret='cs_df0cd372145b7c13f63d6a07b2c6eb4f4f07c2c5',
+        url='http://big-moda.com',
+        consumer_key=consumer_key,
+        consumer_secret=consumer_secret,
         wp_api=True,
         version="wc/v2",
     )
@@ -654,12 +661,12 @@ if __name__ == '__main__':
                     primalinea_parse('http://primalinea.ru/catalog/category/43/all/0'),
                     avigal_parse('http://avigal.ru/blouse-tunic/'),
                     wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')]
-    # bigmoda_pages = [bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/'),
-    #                  bigmoda_parse('https://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
-    #                  bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')]
-    bigmoda_pages = [bigmoda_parse('http://localhost/product-category/platya-bolshih-razmerov/'),
-                     bigmoda_parse('http://localhost/product-category/bluzki-bolshih-razmerov/'),
-                     bigmoda_parse('http://localhost/product-category/rasprodazha-bolshie-razmery/')]
+    bigmoda_pages = [bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/'),
+                     bigmoda_parse('https://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
+                     bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')]
+    # bigmoda_pages = [bigmoda_parse('http://localhost/product-category/platya-bolshih-razmerov/'),
+    #                  bigmoda_parse('http://localhost/product-category/bluzki-bolshih-razmerov/'),
+    #                  bigmoda_parse('http://localhost/product-category/rasprodazha-bolshie-razmery/')]
 
     goods_data = []
     for site in dress_pages:

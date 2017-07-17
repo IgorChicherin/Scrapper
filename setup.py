@@ -4,14 +4,13 @@ from cx_Freeze import setup, Executable
 base = None
 
 if sys.platform == 'win32':
-    base = "Win32GUI"
+    base = "Console"
 
 executables = [Executable("scraper.py", base='Win32GUI')]
 
 packages = ['idna', 'lxml', 'multiprocessing', 'time', 'sys']
 options = {
     'build_exe': {
-
         'packages': packages,
     },
 
