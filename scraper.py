@@ -668,6 +668,7 @@ if __name__ == '__main__':
     #                  bigmoda_parse('http://localhost/product-category/bluzki-bolshih-razmerov/'),
     #                  bigmoda_parse('http://localhost/product-category/rasprodazha-bolshie-razmery/')]
 
+
     goods_data = []
     for site in dress_pages:
         compare_dress(site, bigmoda_pages[0], bigmoda_pages[1], wcapi)
