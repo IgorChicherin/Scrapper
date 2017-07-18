@@ -48,38 +48,45 @@ def novita_parse(url):
         r = requests.get(url)
         soup = BeautifulSoup(r.text.encode('utf-8'), 'lxml')
         data = {}
-        data['name'] = re.search(r'(?<=№)(\d+/\d+)|(?<=№)(\d+)', soup.h1.text.strip()).group(0)
-        data['type'] = soup.h1.text.strip().split(' ')
-        if 'Акция' in data['type'] and '\'Одна' not in data['type'] and '50%' not in data['type']:
-            data['type'] = data['type'][2]
-        elif '50%' in data['type']:
-            data['type'] = data['type'][4]
-        elif '\'Одна' in data['type']:
-            data['type'] = data['type'][4]
-        else:
-            data['type'] = data['type'][0]
-        if data['type'] == 'Платье' or data['type'] == 'Блузка' or data['type'] == 'Туника':
-            colors = soup.find_all('td', {'class': 'col-color'})
-            data['color_list'] = [color.text.strip() for color in colors if color.text.strip() != 'Цвет/размер']
-            data['sizes_list'] = soup.find_all('td', {'class': 'inv'})
-            data['sizes_list'] = [size.text.strip() for size in data['sizes_list']]
-            data['color_size'] = {color: data['sizes_list'].copy() for color in data['color_list']}
-            data['sizes_accepted'] = soup.find_all('td', {'class': 'tdforselect'})
-            data['sizes_accepted'] = ['disabled' if 'disabled' in size_accepted['class'] else 'enabled' for
-                                      size_accepted in
-                                      data['sizes_accepted']]
-            data['price'] = soup.find('div', {'class': 'value'}).text.replace(',', '').split('.')
-            data['price'] = data['price'][0]
-            color_size_tags = _create_sizes_dict(data['color_list'], data['sizes_list'], data['sizes_accepted'])
-            for key, value in color_size_tags.items():
-                for item in range(len(value)):
-                    if value[item] == 'disabled':
-                        data['color_size'][key].pop(color_size_tags[key].index(value[item]))
-            for key in data['color_size']:
-                # print(
-                # ['Новита ' + data['name'] + ' ' + str(key), data['color_size'][key], data['price'], data['type']])
-                result.append(
-                    ['Новита ' + data['name'] + ' ' + str(key), data['color_size'][key], data['price'], data['type'], False])
+        try:
+            data['name'] = re.search(r'(?<=№)(\d+/\d+)|(?<=№)(\d+)', soup.h1.text.strip()).group(0)
+            data['type'] = soup.h1.text.strip().split(' ')
+            if 'Акция' in data['type'] and '\'Одна' not in data['type'] and '50%' not in data['type']:
+                data['type'] = data['type'][2]
+            elif '50%' in data['type']:
+                data['type'] = data['type'][4]
+            elif '\'Одна' in data['type']:
+                data['type'] = data['type'][4]
+            else:
+                data['type'] = data['type'][0]
+            if data['type'] == 'Платье' or data['type'] == 'Блузка' or data['type'] == 'Туника':
+                colors = soup.find_all('td', {'class': 'col-color'})
+                data['color_list'] = [color.text.strip() for color in colors if color.text.strip() != 'Цвет/размер']
+                data['sizes_list'] = soup.find_all('td', {'class': 'inv'})
+                data['sizes_list'] = [size.text.strip() for size in data['sizes_list']]
+                data['color_size'] = {color: data['sizes_list'].copy() for color in data['color_list']}
+                data['sizes_accepted'] = soup.find_all('td', {'class': 'tdforselect'})
+                data['sizes_accepted'] = ['disabled' if 'disabled' in size_accepted['class'] else 'enabled' for
+                                          size_accepted in
+                                          data['sizes_accepted']]
+                data['price'] = soup.find('div', {'class': 'value'}).text.replace(',', '').split('.')
+                data['price'] = data['price'][0]
+                color_size_tags = _create_sizes_dict(data['color_list'], data['sizes_list'], data['sizes_accepted'])
+                for key, value in color_size_tags.items():
+                    for item in range(len(value)):
+                        if value[item] == 'disabled':
+                            data['color_size'][key].pop(color_size_tags[key].index(value[item]))
+                for key in data['color_size']:
+                    # print(['Новита ' + data['name'] + ' ' + str(key), data['color_size'][key], data['price'], data['type']])
+                    result.append(
+                        ['Новита ' + data['name'] + ' ' + str(key), data['color_size'][key], data['price'],
+                         data['type'], False])
+        except AttributeError:
+            with open('errors.txt', 'a', encoding='utf-8') as err_file:
+                err_file.write('Ошибка в карточке: %s \n' % (link))
+            i += 1
+            printProgressBar(i, l, prefix='Novita Parsing:', suffix='Complete', length=50)
+            continue
         time.sleep(0.1)
         i += 1
         printProgressBar(i, l, prefix='Novita Parsing:', suffix='Complete', length=50)
@@ -116,21 +123,28 @@ def primalinea_parse(url):
                 data['is_new'] = False
         except AttributeError:
             data['is_new'] = False
-        data['name'] = soup.h1.text.strip()
-        data['type'] = data['name'].split(' ')[1].capitalize() if len(data['name'].split(' ')) > 2 and \
-                                                                  'new' not in data['name'].split(' ') \
-            else data['name'].split(' ')[0].capitalize()
-        if data['type'] == 'Блуза' or data['type'] == 'Кардиган' or data['type'] == 'Туника' or data[
-            'type'] == 'Платье':
-            data['name'] = data['name'].split(' ')[2] if len(data['name'].split(' ')) > 2 and 'new' not in data[
-                'name'].split(' ') else data['name'].split(' ')[1]
-            price = soup.find('div', attrs={'id': 'catalog-item-description'})
-            price = re.search(r'(\d+)', price.p.text.strip().replace(' ', ''))
-            data['price'] = int(price.group(0)) * 2
-            data['sizes_list'] = soup.find_all('option')
-            data['sizes_list'] = [item.text for item in data['sizes_list']]
-            # print('Прима ' + data['name'].lower(), data['sizes_list'], data['price'], data['type'])
-            result.append(['Прима ' + data['name'], data['sizes_list'], data['price'], data['type'], data['is_new']])
+        try:
+            data['name'] = soup.h1.text.strip()
+            data['type'] = data['name'].split(' ')[1].capitalize() if len(data['name'].split(' ')) > 2 and \
+                                                                      'new' not in data['name'].split(' ') \
+                else data['name'].split(' ')[0].capitalize()
+            if data['type'] == 'Блуза' or data['type'] == 'Кардиган' or data['type'] == 'Туника' or data[
+                'type'] == 'Платье':
+                data['name'] = data['name'].split(' ')[2] if len(data['name'].split(' ')) > 2 and 'new' not in data[
+                    'name'].split(' ') else data['name'].split(' ')[1]
+                price = soup.find('div', attrs={'id': 'catalog-item-description'})
+                price = re.search(r'(\d+)', price.p.text.strip().replace(' ', ''))
+                data['price'] = int(price.group(0)) * 2
+                data['sizes_list'] = soup.find_all('option')
+                data['sizes_list'] = [item.text for item in data['sizes_list']]
+                # print('Прима ' + data['name'].lower(), data['sizes_list'], data['price'], data['type'])
+                result.append(['Прима ' + data['name'], data['sizes_list'], data['price'], data['type'], data['is_new']])
+        except AttributeError:
+            with open('errors.txt', 'a', encoding='utf-8') as err_file:
+                err_file.write('Ошибка в карточке: %s \n' % (link))
+            i += 1
+            printProgressBar(i, l, prefix='Primalinea Parsing:', suffix='Complete', length=50)
+            continue
         time.sleep(0.1)
         i += 1
         printProgressBar(i, l, prefix='Primalinea Parsing:', suffix='Complete', length=50)
@@ -175,25 +189,34 @@ def avigal_parse(url):
         items_link_list = [item.find('div', attrs={'class': 'name'}).a.get('href') for item in items_link_list]
         i = 0
         l = len(items_link_list)
-        printProgressBar(i, l, prefix='Wisell Parsing:',
+        printProgressBar(i, l, prefix='Avigal Parsing:',
                          suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
         for link in items_link_list:
             r = session.get(link)
             soup = BeautifulSoup(r.text, 'lxml')
-            data['price'] = soup.find('span', attrs={'class': 'micro-price', 'itemprop': 'price'})
-            data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
-            data['price'] = int(data['price'].group(0)) * 2
-            # if data['price'] > 2500:
-            data['type'] = soup.find('h1').text.strip()
-            data['name'] = soup.find('span', attrs={'itemprop': 'model'})
-            data['name'] = data['name'].text
-            sizes_list = soup.find_all('label', {'class': 'optid-13'})
-            data['sizes_list'] = []
-            for item in sizes_list:
-                if r':n\a' not in item['title']:
-                    data['sizes_list'].append(item.text.strip())
-            # print('Авигаль ' + data['name'], data['sizes_list'], data['price'], data['type'])
-            result.append(['Авигаль ' + data['name'], data['sizes_list'], data['price'], data['type'], data['is_new']])
+            try:
+                data['price'] = soup.find('span', attrs={'class': 'micro-price', 'itemprop': 'price'})
+                data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
+                data['price'] = int(data['price'].group(0)) * 2
+                # if data['price'] > 2500:
+                data['type'] = soup.find('h1').text.strip()
+                data['name'] = soup.find('span', attrs={'itemprop': 'model'})
+                data['name'] = data['name'].text
+                sizes_list = soup.find_all('label', {'class': 'optid-13'})
+                data['sizes_list'] = []
+                for item in sizes_list:
+                    if r':n\a' not in item['title']:
+                        data['sizes_list'].append(item.text.strip())
+                # print('Авигаль ' + data['name'], data['sizes_list'], data['price'], data['type'])
+                result.append(
+                    ['Авигаль ' + data['name'], data['sizes_list'], data['price'], data['type'], data['is_new']])
+            except AttributeError:
+                with open('errors.txt', 'a', encoding='utf-8') as err_file:
+                    err_file.write('Ошибка в карточке: %s \n' % (link))
+                i += 1
+                printProgressBar(i, l, prefix='Avigal Parsing:',
+                                 suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+                continue
             time.sleep(0.1)
             i += 1
             printProgressBar(i, l, prefix='Avigal Parsing:',
@@ -252,66 +275,73 @@ def wisell_parse(url):
         for item_link in data['item_links']:
             r = requests.get(item_link, headers=headers)
             soup = BeautifulSoup(r.text, 'lxml')
-            data['name'] = soup.find('li', attrs={'class': 'item_lost'})
-            data['name'] = data['name'].span.text
-            data['type'] = soup.find('h1').text.split(' ')[0]
-            if soup.h2.text == 'Нет в наличии':
-                with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
-                    file.write('Нет в наличии на сайте Wisell: {}\n'.format(data['name']))
+            try:
+                data['name'] = soup.find('li', attrs={'class': 'item_lost'})
+                data['name'] = data['name'].span.text
+                data['type'] = soup.find('h1').text.split(' ')[0]
+                if soup.h2.text == 'Нет в наличии':
+                    with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
+                        file.write('Нет в наличии на сайте Wisell: {}\n'.format(data['name']))
+                        i += 1
+                        printProgressBar(i, l, prefix='Wisell Parsing:',
+                                         suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+                    continue
+                data['price'] = soup.find('span', attrs={'class': 'price_val'})
+                data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
+                data['price'] = int(data['price'].group(0))
+                if data['price'] < 1800:
                     i += 1
                     printProgressBar(i, l, prefix='Wisell Parsing:',
                                      suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+                    continue
+                data['sizes_list'] = soup.find_all('ul', {'class': 'size_list'})
+                data['sizes_list'] = data['sizes_list'][0].find_all('li', {'class': 'check_item'})
+                data['sizes_list'] = [size.text.strip() for size in data['sizes_list']]
+                data['sizes_list'].pop(0)
+                data['sizes_list'].pop(-1)
+                data['small_sizes'] = soup.find('ul', attrs={'id': 'size-interval-tabs'}).findAll('li')
+                if data['small_sizes'][0]['data-url'] != '' and len(data['small_sizes']) > 1:
+                    data['small_sizes'] = 'https://wisell.ru' + data['small_sizes'][0]['data-url']
+                    r = requests.get(data['small_sizes'], headers=headers)
+                    soup = BeautifulSoup(r.text, 'lxml')
+                    small_name = soup.find('li', attrs={'class': 'item_lost'})
+                    if small_name.span.text != data['name']:
+                        if soup.h2.text == 'Нет в наличии':
+                            with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
+                                file.write('Не прошла синхронизация на сайте Wisell: {}\n'.format(small_name.span.text))
+                                i += 1
+                                printProgressBar(i, l, prefix='Wisell Parsing:',
+                                                 suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])),
+                                                 length=50)
+                            continue
+                        data['name'] = data['name'] + ' ' + small_name.span.text
+                        small_sizes_list = soup.find_all('ul', {'class': 'size_list'})
+                        small_sizes_list = small_sizes_list[0].find_all('li', {'class': 'check_item'})
+                        small_sizes_list = [size.text.strip() for size in small_sizes_list]
+                        small_sizes_list.pop(0)
+                        small_sizes_list.pop(-1)
+                        for size in small_sizes_list:
+                            if size not in data['sizes_list'] and int(size) > 46:
+                                data['sizes_list'].append(size)
+                    data['sizes_list'].sort()
+                    # print(['Визель ' + data['name'], data['sizes_list'], data['price'], data['type']])
+                    result.append(
+                        ['Визель ' + data['name'], data['sizes_list'], data['price'], data['type'], data['is_new']])
+                elif len(data['small_sizes']) == 1:
+                    sizes_list = []
+                    for size in data['sizes_list']:
+                        if int(size) > 46:
+                            sizes_list.append(size)
+                    if len(sizes_list) != 0:
+                        sizes_list.sort()
+                        # print(['Визель ' + data['name'], sizes_list, data['price'], data['type']])
+                        result.append(['Визель ' + data['name'], sizes_list, data['price'], data['type'], data['is_new']])
+            except AttributeError:
+                with open('errors.txt', 'a', encoding='utf-8') as err_file:
+                    err_file.write('Ошибка в карточке: %s \n' % (item_link))
                 continue
-            data['price'] = soup.find('span', attrs={'class': 'price_val'})
-            data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
-            data['price'] = int(data['price'].group(0))
-            if data['price'] < 1800:
-                i += 1
-                printProgressBar(i, l, prefix='Wisell Parsing:',
-                                 suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+            except IndexError:
                 continue
-            data['sizes_list'] = soup.find_all('ul', {'class': 'size_list'})
-            data['sizes_list'] = data['sizes_list'][0].find_all('li', {'class': 'check_item'})
-            data['sizes_list'] = [size.text.strip() for size in data['sizes_list']]
-            data['sizes_list'].pop(0)
-            data['sizes_list'].pop(-1)
-            data['small_sizes'] = soup.find('ul', attrs={'id': 'size-interval-tabs'}).findAll('li')
-            if data['small_sizes'][0]['data-url'] != '' and len(data['small_sizes']) > 1:
-                data['small_sizes'] = 'https://wisell.ru' + data['small_sizes'][0]['data-url']
-                r = requests.get(data['small_sizes'], headers=headers)
-                soup = BeautifulSoup(r.text, 'lxml')
-                small_name = soup.find('li', attrs={'class': 'item_lost'})
-                if small_name.span.text != data['name']:
-                    if soup.h2.text == 'Нет в наличии':
-                        with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
-                            file.write('Нет в наличии на сайте Wisell: {}\n'.format(small_name.span.text))
-                            i += 1
-                            printProgressBar(i, l, prefix='Wisell Parsing:',
-                                             suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])),
-                                             length=50)
-                        continue
-                    data['name'] = data['name'] + ' ' + small_name.span.text
-                    small_sizes_list = soup.find_all('ul', {'class': 'size_list'})
-                    small_sizes_list = small_sizes_list[0].find_all('li', {'class': 'check_item'})
-                    small_sizes_list = [size.text.strip() for size in small_sizes_list]
-                    small_sizes_list.pop(0)
-                    small_sizes_list.pop(-1)
-                    for size in small_sizes_list:
-                        if size not in data['sizes_list'] and int(size) > 46:
-                            data['sizes_list'].append(size)
-                data['sizes_list'].sort()
-                # print(['Визель ' + data['name'], data['sizes_list'], data['price'], data['type']])
-                result.append(
-                    ['Визель ' + data['name'], data['sizes_list'], data['price'], data['type'], data['is_new']])
-            elif len(data['small_sizes']) == 1:
-                sizes_list = []
-                for size in data['sizes_list']:
-                    if int(size) > 46:
-                        sizes_list.append(size)
-                if len(sizes_list) != 0:
-                    sizes_list.sort()
-                    # print(['Визель ' + data['name'], sizes_list, data['price'], data['type']])
-                    result.append(['Визель ' + data['name'], sizes_list, data['price'], data['type'], data['is_new']])
             time.sleep(0.1)
             i += 1
             printProgressBar(i, l, prefix='Wisell Parsing:',
@@ -351,22 +381,30 @@ def bigmoda_parse(url):
         for item in data['item_links']:
             r = requests.get(item)
             soup = BeautifulSoup(r.text, 'lxml')
-            data['name'] = soup.find('span', {'class': 'sku'}).text
-            data['price'] = soup.find('p', {'class': 'price'}).span.text.split('.')[0].replace(',', '')
-            data['sizes_list'] = soup.find('div', {'class': 'ivpa_attribute'}, {'class': 'ivpa_text'})
-            data['sizes_list'] = data['sizes_list'].find_all('span', {'class': 'ivpa_term'})
-            data['sizes_list'] = [item.text.strip() for item in data['sizes_list']]
-            data['product_id'] = re.search(r'(\d+)', soup.find('div', attrs={'class': 'product'})['id']).group(0)
-            sizes_id = re.findall(r'(?<="variation_id":)(\d+)',
-                                  soup.find('div', attrs={'id': 'ivpa-content'})['data-variations'])
+            try:
+                data['name'] = soup.find('span', {'class': 'sku'}).text
+                data['price'] = soup.find('p', {'class': 'price'}).span.text.split('.')[0].replace(',', '')
+                data['sizes_list'] = soup.find('div', {'class': 'ivpa_attribute'}, {'class': 'ivpa_text'})
+                data['sizes_list'] = data['sizes_list'].find_all('span', {'class': 'ivpa_term'})
+                data['sizes_list'] = [item.text.strip() for item in data['sizes_list']]
+                data['product_id'] = re.search(r'(\d+)', soup.find('div', attrs={'class': 'product'})['id']).group(0)
+                sizes_id = re.findall(r'(?<="variation_id":)(\d+)',
+                                      soup.find('div', attrs={'id': 'ivpa-content'})['data-variations'])
 
-            sizes_key = re.findall(r'(?<="attribute_pa_size":)"(\d+)"',
-                                   soup.find('div', attrs={'id': 'ivpa-content'})['data-variations'])
-            data['product_size_id'] = dict(zip(sizes_key, sizes_id))
+                sizes_key = re.findall(r'(?<="attribute_pa_size":)"(\d+)"',
+                                       soup.find('div', attrs={'id': 'ivpa-content'})['data-variations'])
+                data['product_size_id'] = dict(zip(sizes_key, sizes_id))
 
-            # print([data['name'], data['sizes_list'], data['price'], data['product_id'], data['product_size_id']])
-            result.append(
-                [data['name'], data['sizes_list'], data['price'], data['product_id'], data['product_size_id']])
+                # print([data['name'], data['sizes_list'], data['price'], data['product_id'], data['product_size_id']])
+                result.append(
+                    [data['name'], data['sizes_list'], data['price'], data['product_id'], data['product_size_id']])
+            except AttributeError:
+                with open('errors.txt', 'a', encoding='utf-8') as err_file:
+                    err_file.write('Ошибка в карточке: %s \n' % (item))
+                i += 1
+                printProgressBar(i, l, prefix='Bigmoda Parsing:',
+                                 suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+                continue
             time.sleep(0.1)
             i += 1
             printProgressBar(i, l, prefix='Bigmoda Parsing:',
@@ -629,7 +667,7 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
 
 
 if __name__ == '__main__':
-    files = ['добавить удалить размеры.txt', 'добавить удалить карточки.txt']
+    files = ['добавить удалить размеры.txt', 'добавить удалить карточки.txt', 'errors.txt']
     for file in files:
         if os.path.exists(file):
             os.remove(file)
@@ -667,7 +705,6 @@ if __name__ == '__main__':
     # bigmoda_pages = [bigmoda_parse('http://localhost/product-category/platya-bolshih-razmerov/'),
     #                  bigmoda_parse('http://localhost/product-category/bluzki-bolshih-razmerov/'),
     #                  bigmoda_parse('http://localhost/product-category/rasprodazha-bolshie-razmery/')]
-
 
     goods_data = []
     for site in dress_pages:
