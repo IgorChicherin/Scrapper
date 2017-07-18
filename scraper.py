@@ -19,9 +19,9 @@ def _create_sizes_dict(color_list, sizes_list, sizes_accepted):
     :return: dict
     '''
     i = 0
-    temp_dict = {}
+    temp_dict = dict()
     for color in color_list:
-        temp_list = []
+        temp_list = list()
         for item in sizes_accepted[i:i + len(sizes_list)]:
             temp_list.append(item)
             res = {color: temp_list}
@@ -39,7 +39,7 @@ def novita_parse(url):
     r = requests.get(url)
     soup = BeautifulSoup(r.text, 'lxml')
     items_link_list = soup.find_all('div', {'class': 'name'})
-    result = []
+    result = list()
     i = 0
     l = len(items_link_list)
     printProgressBar(i, l, prefix='Progress:', suffix='Complete', length=50)
@@ -47,7 +47,7 @@ def novita_parse(url):
         url = link.find('a').get('href')
         r = requests.get(url)
         soup = BeautifulSoup(r.text.encode('utf-8'), 'lxml')
-        data = {}
+        data = dict()
         try:
             data['name'] = re.search(r'(?<=№)(\d+/\d+)|(?<=№)(\d+)', soup.h1.text.strip()).group(0)
             data['type'] = soup.h1.text.strip().split(' ')
@@ -107,14 +107,14 @@ def primalinea_parse(url):
     soup = BeautifulSoup(r.text, 'lxml')
     items_link_list = soup.find_all('a', {'class': 'catalog-item-link'})
     items_link_list = [item.get('href') for item in items_link_list]
-    result = []
+    result = list()
     i = 0
     l = len(items_link_list)
     printProgressBar(i, l, prefix='Progress:', suffix='Complete', length=50)
     for link in items_link_list:
         r = session.get(link)
         soup = BeautifulSoup(r.text.encode('utf-8'), 'lxml')
-        data = {}
+        data = dict()
         try:
             data['is_new'] = soup.find('div', attrs={'id': 'catalog-item-tags'}).find('a').text.strip()
             if data['is_new'] == 'Новинки':
@@ -162,13 +162,13 @@ def avigal_parse(url):
     r = session.post('http://avigal.ru/login/', payload)
     r = session.get(url)
     soup = BeautifulSoup(r.text, 'lxml')
-    data = {}
-    result = []
+    data = dict()
+    result = list()
     data['paginaton'] = soup.find_all('div', {'class': 'pagination'})
     data['paginaton'] = data['paginaton'][0].find_all('li')
     data['paginaton_url'] = [url]
-    data['item_links'] = []
-    items_link_list = []
+    data['item_links'] = list()
+    items_link_list = list()
     j = 1
     for page in data['paginaton']:
         try:
@@ -203,7 +203,7 @@ def avigal_parse(url):
                 data['name'] = soup.find('span', attrs={'itemprop': 'model'})
                 data['name'] = data['name'].text
                 sizes_list = soup.find_all('label', {'class': 'optid-13'})
-                data['sizes_list'] = []
+                data['sizes_list'] = list()
                 for item in sizes_list:
                     if r':n\a' not in item['title']:
                         data['sizes_list'].append(item.text.strip())
@@ -236,8 +236,8 @@ def wisell_parse(url):
     }
     r = requests.get(url, headers=headers)
     soup = BeautifulSoup(r.text, 'lxml')
-    data = {}
-    result = []
+    data = dict()
+    result = list()
     last = False
     data['paginaton_url'] = [url]
     while last == False:
@@ -328,7 +328,7 @@ def wisell_parse(url):
                     result.append(
                         ['Визель ' + data['name'], data['sizes_list'], data['price'], data['type'], data['is_new']])
                 elif len(data['small_sizes']) == 1:
-                    sizes_list = []
+                    sizes_list = list()
                     for size in data['sizes_list']:
                         if int(size) > 46:
                             sizes_list.append(size)
@@ -358,8 +358,8 @@ def bigmoda_parse(url):
     '''
     r = requests.get(url)
     soup = BeautifulSoup(r.text, 'lxml')
-    data = {}
-    result = []
+    data = dict()
+    result = list()
     data['paginaton_url'] = soup.find_all('a', {'class': 'page-numbers'})
     data['paginaton_url'] = [link.get('href') for link in data['paginaton_url'] if link.text != '→']
     if len(data['paginaton_url']) != 0:
@@ -419,7 +419,7 @@ def krasa_parse(file_name):
     :param file_name: str
     :return: list
     '''
-    result = []
+    result = list()
     with open(file_name) as csvfile:
         reader = csv.reader(csvfile, dialect='excel', delimiter=';')
         for row in reader:
@@ -458,7 +458,7 @@ def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc, wcapi_conn):
                 product_id = bm_drs[3]
                 product_size_id = bm_drs[4]
                 if dress[0] == bm_drs[0]:
-                    size_to_add = []
+                    size_to_add = list()
                     for size in dress[1]:
                         if size not in bm_drs[1]:
                             size_to_add.append(size)
@@ -487,7 +487,7 @@ def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc, wcapi_conn):
                     if len(size_to_add) != 0:
                         with open('добавить удалить размеры.txt', 'a', encoding='utf-8') as file:
                             file.write('Добавить размеры: {}, {}, {}\n'.format(dress[0], size_to_add, dress[2]))
-                    size_to_del = []
+                    size_to_del = list()
                     for size in bm_drs[1]:
                         if size not in dress[1]:
                             size_to_del.append(size)
@@ -679,7 +679,7 @@ if __name__ == '__main__':
     consumer_secret = keys[1]
 
     wcapi = API(
-        url='http://big-moda.com',
+        url='http://localhost',
         consumer_key=consumer_key,
         consumer_secret=consumer_secret,
         wp_api=True,
@@ -699,14 +699,14 @@ if __name__ == '__main__':
                     primalinea_parse('http://primalinea.ru/catalog/category/43/all/0'),
                     avigal_parse('http://avigal.ru/blouse-tunic/'),
                     wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')]
-    bigmoda_pages = [bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/'),
-                     bigmoda_parse('https://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
-                     bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')]
-    # bigmoda_pages = [bigmoda_parse('http://localhost/product-category/platya-bolshih-razmerov/'),
-    #                  bigmoda_parse('http://localhost/product-category/bluzki-bolshih-razmerov/'),
-    #                  bigmoda_parse('http://localhost/product-category/rasprodazha-bolshie-razmery/')]
+    # bigmoda_pages = [bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/'),
+    #                  bigmoda_parse('https://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
+    #                  bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')]
+    bigmoda_pages = [bigmoda_parse('http://localhost/product-category/platya-bolshih-razmerov/'),
+                     bigmoda_parse('http://localhost/product-category/bluzki-bolshih-razmerov/'),
+                     bigmoda_parse('http://localhost/product-category/rasprodazha-bolshie-razmery/')]
 
-    goods_data = []
+    goods_data = list()
     for site in dress_pages:
         compare_dress(site, bigmoda_pages[0], bigmoda_pages[1], wcapi)
         for dress in site:
