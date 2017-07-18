@@ -524,7 +524,7 @@ def del_item(goods_data, wcapi_conn):
             with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
                 file.write('Удалить карточку: {}\n'.format(bm_dress[0]))
     for bm_blouse in bigmoda_pages[1]:
-        if bm_blouse[0] not in names and bm_blouse[0] not in bm_names_exc:
+        if (bm_blouse[0] not in names) and (bm_blouse[0] not in bm_names_exc):
             for size, size_id in bm_blouse[4].items():
                 wcapi_conn.delete('products/%s/variations/%s' % (bm_blouse[3], size_id))
             data = {
@@ -686,19 +686,20 @@ if __name__ == '__main__':
         version="wc/v2",
     )
 
-    dress_pages = [novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/'),
-                   novita_parse('http://novita-nsk.ru/shop/aktsii/'),
-                   novita_parse('http://novita-nsk.ru/index.php?route=product/category&path=1_19'),
-                   novita_parse('http://novita-nsk.ru/shop/yubki/'),
-                   primalinea_parse('http://primalinea.ru/catalog/category/42/all/0'),
-                   avigal_parse('http://avigal.ru/dress/'),
-                   wisell_parse('https://wisell.ru/catalog/platya/'),
-                   krasa_parse('krasa.csv')
+    dress_pages = [#novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/'),
+                   #novita_parse('http://novita-nsk.ru/shop/aktsii/'),
+                   #novita_parse('http://novita-nsk.ru/index.php?route=product/category&path=1_19'),
+                   #novita_parse('http://novita-nsk.ru/shop/yubki/'),
+                   #primalinea_parse('http://primalinea.ru/catalog/category/42/all/0'),
+                   #avigal_parse('http://avigal.ru/dress/'),
+                   #wisell_parse('https://wisell.ru/catalog/platya/'),
+                   #krasa_parse('krasa.csv')
                    ]
     blouse_pages = [novita_parse('http://novita-nsk.ru/shop/bluzy/'),
-                    primalinea_parse('http://primalinea.ru/catalog/category/43/all/0'),
-                    avigal_parse('http://avigal.ru/blouse-tunic/'),
-                    wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')]
+                    #primalinea_parse('http://primalinea.ru/catalog/category/43/all/0'),
+                    #avigal_parse('http://avigal.ru/blouse-tunic/'),
+                    #wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')
+                    ]
     # bigmoda_pages = [bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/'),
     #                  bigmoda_parse('https://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
     #                  bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')]
