@@ -138,7 +138,8 @@ def primalinea_parse(url):
                 data['sizes_list'] = soup.find_all('option')
                 data['sizes_list'] = [item.text for item in data['sizes_list']]
                 # print('Прима ' + data['name'].lower(), data['sizes_list'], data['price'], data['type'])
-                result.append(['Прима ' + data['name'], data['sizes_list'], data['price'], data['type'], data['is_new']])
+                result.append(
+                    ['Прима ' + data['name'], data['sizes_list'], data['price'], data['type'], data['is_new']])
         except AttributeError:
             with open('errors.txt', 'a', encoding='utf-8') as err_file:
                 err_file.write('Ошибка в карточке: %s \n' % (link))
@@ -335,7 +336,8 @@ def wisell_parse(url):
                     if len(sizes_list) != 0:
                         sizes_list.sort()
                         # print(['Визель ' + data['name'], sizes_list, data['price'], data['type']])
-                        result.append(['Визель ' + data['name'], sizes_list, data['price'], data['type'], data['is_new']])
+                        result.append(
+                            ['Визель ' + data['name'], sizes_list, data['price'], data['type'], data['is_new']])
             except AttributeError:
                 with open('errors.txt', 'a', encoding='utf-8') as err_file:
                     err_file.write('Ошибка в карточке: %s \n' % (item_link))
@@ -411,6 +413,7 @@ def bigmoda_parse(url):
                              suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
         j += 1
     return result
+
 
 def krasa_parse(file_name):
     '''
@@ -557,9 +560,11 @@ def del_item(goods_data, wcapi_conn):
                         'categories': [
                             {
                                 'slug': '%s' % ('platya-bolshih-razmerov' if drs[3] == 'Платье' or
-                                                                             drs[3] == 'Костюм' else 'bluzki-bolshih-razmerov'),
+                                                                             drs[
+                                                                                 3] == 'Костюм' else 'bluzki-bolshih-razmerov'),
                                 'name': '%s' % ('Платья больших размеров' if drs[3] == 'Платье' or
-                                                                             drs[3] == 'Костюм' else 'Блузки больших размеров'),
+                                                                             drs[
+                                                                                 3] == 'Костюм' else 'Блузки больших размеров'),
                                 'id': '%i' % (11 if drs[3] == 'Платье' or drs[3] == 'Костюм' else 16)
                             }
                         ],
@@ -598,11 +603,12 @@ def del_item(goods_data, wcapi_conn):
                         ]
                     }
                     product = wcapi.post('products', data).json()
-                    if 'message' in product and product['message'] == 'Неверный или дублированный артикул.':
-                        for size in name[1]:
+                    if 'message' in product and product['message'] == 'Неверный или дублированный артикул.' and len(
+                            drs[1]) != 0:
+                        for size in drs[1]:
                             data = {
                                 'description': '',
-                                'regular_price': '%s' % (name[2]),
+                                'regular_price': '%s' % (drs[2]),
                                 'tax_status': 'taxable',
                                 'tax_class': '',
                                 'attributes': [
@@ -677,7 +683,7 @@ if __name__ == '__main__':
     consumer_secret = keys[1]
 
     wcapi = API(
-        url='http://big-moda.com',
+        url='http://localhost',
         consumer_key=consumer_key,
         consumer_secret=consumer_secret,
         wp_api=True,
@@ -696,13 +702,12 @@ if __name__ == '__main__':
                     primalinea_parse('http://primalinea.ru/catalog/category/43/all/0'),
                     avigal_parse('http://avigal.ru/blouse-tunic/'),
                     wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')]
-    bigmoda_pages = [bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/'),
-                     bigmoda_parse('https://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
-                     bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')]
-    # bigmoda_pages = [bigmoda_parse('http://localhost/product-category/platya-bolshih-razmerov/'),
-    #                  bigmoda_parse('http://localhost/product-category/bluzki-bolshih-razmerov/'),
-    #                  bigmoda_parse('http://localhost/product-category/rasprodazha-bolshie-razmery/')]
-
+    # bigmoda_pages = [bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/'),
+    #                  bigmoda_parse('https://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
+    #                  bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')]
+    bigmoda_pages = [bigmoda_parse('http://localhost/product-category/platya-bolshih-razmerov/'),
+                     bigmoda_parse('http://localhost/product-category/bluzki-bolshih-razmerov/'),
+                     bigmoda_parse('http://localhost/product-category/rasprodazha-bolshie-razmery/')]
 
     goods_data = list()
     for site in dress_pages:
