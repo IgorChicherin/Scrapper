@@ -714,6 +714,8 @@ if __name__ == '__main__':
         compare_dress(site, bigmoda_pages[0], bigmoda_pages[1], wcapi)
         for dress in site:
             goods_data.append(dress)
-        for site in blouse_pages:
-            compare_dress(site, bigmoda_pages[1], bigmoda_pages[2], wcapi)
+    for site in blouse_pages:
+        compare_dress(site, bigmoda_pages[1], bigmoda_pages[2], wcapi)
+        for blouse in site:
+            goods_data.append(blouse)
     del_item(goods_data, wcapi)
