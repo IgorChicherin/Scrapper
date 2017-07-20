@@ -537,7 +537,7 @@ def del_item(goods_data, wcapi_conn):
             with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
                 file.write('Удалить карточку: {}\n'.format(bm_blouse[0]))
     for name in goods_data:
-        if (name[0] not in bm_names_dress and name[0] not in bm_names_blouse) and name[0] not in bm_names_exc:
+        if name[0] not in bm_names_dress and name[0] not in bm_names_blouse and name[0] not in bm_names_exc:
             if name[4] is True:
                 if name[0].split(' ')[0] == 'Краса':
                     chart_id = '13252'
@@ -635,35 +635,40 @@ def del_item(goods_data, wcapi_conn):
                                 }
                             ],
                         }
-                        wcapi.post('products/%s/variations' % (product['id']), data)
+                        wcapi_conn.post('products/%s/variations' % (product['id']), data)
             else:
-                search_res = wcapi.get('products/?sku=%s' % (name[0])).json()
+                search_res = wcapi_conn.get('products/?sku=%s' % (name[0])).json()
                 if list(search_res):
-                    search_res = search_res[0]
-                    for attribute in search_res['attributes']:
-                        if attribute['name'] == 'Размер':
-                            for size in name[1]:
-                                data = {
-                                    'description': '',
-                                    'regular_price': str(name[2]),
-                                    'tax_status': 'taxable',
-                                    'tax_class': '',
-                                    'attributes': [
-                                        {
-                                            "id": 1,
-                                            "name": "Размер",
-                                            "option": size
-                                        }
-                                    ],
-                                }
-                                if size not in attribute['options']:
-                                    attribute['options'].append(size)
-                                    wcapi_conn.put('products/%s' % (search_res['id']), search_res)
-                                    wcapi_conn.post('products/%s/variations' % (search_res['id']), data)
-                                else:
-                                    wcapi_conn.post('products/%s/variations' % (search_res['id']), data)
-                    wcapi_conn.put('products/%s' % (search_res['id']),
-                                   data={'status': 'publish', 'catalog_visibility': 'visible'})
+                    try:
+                        search_res = search_res[0]
+                        for attribute in search_res['attributes']:
+                            if attribute['name'] == 'Размер':
+                                for size in name[1]:
+                                    data = {
+                                        'description': '',
+                                        'regular_price': str(name[2]),
+                                        'tax_status': 'taxable',
+                                        'tax_class': '',
+                                        'attributes': [
+                                            {
+                                                "id": 1,
+                                                "name": "Размер",
+                                                "option": size
+                                            }
+                                        ],
+                                    }
+                                    if size not in attribute['options']:
+                                        attribute['options'].append(size)
+                                        wcapi_conn.put('products/%s' % (search_res['id']), search_res)
+                                        wcapi_conn.post('products/%s/variations' % (search_res['id']), data)
+                                    else:
+                                        wcapi_conn.post('products/%s/variations' % (search_res['id']), data)
+                        wcapi_conn.put('products/%s' % (search_res['id']),
+                                        data={'status': 'publish', 'catalog_visibility': 'visible'})
+                    except KeyError:
+                        with open('errors.txt', 'a', encoding='utf-8') as err_file:
+                            err_file.write('Ошибка в карточке: %s \n' % (name[0]))
+                        continue
             with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
                 file.write('Добавить карточку: {} {} {}\n'.format(name[0], name[1], name[2]))
     return goods_data
@@ -722,14 +727,14 @@ if __name__ == '__main__':
                    novita_parse('http://novita-nsk.ru/shop/yubki/'),
                    primalinea_parse('http://primalinea.ru/catalog/category/42/all/0'),
                    avigal_parse('http://avigal.ru/dress/'),
-                   wisell_parse('https://wisell.ru/catalog/platya/'),
+                   wisell_parse('http://wisell.ru/catalog/platya/'),
                    krasa_parse('krasa.csv')]
     blouse_pages = [novita_parse('http://novita-nsk.ru/shop/bluzy/'),
                     primalinea_parse('http://primalinea.ru/catalog/category/43/all/0'),
                     avigal_parse('http://avigal.ru/blouse-tunic/'),
-                    wisell_parse('https://wisell.ru/catalog/tuniki_bluzy/')]
-    # bigmoda_pages = [bigmoda_parse('https://big-moda.com/product-category/platya-bolshih-razmerov/'),
-    #                  bigmoda_parse('https://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
+                    wisell_parse('http://wisell.ru/catalog/tuniki_bluzy/')]
+    # bigmoda_pages = [bigmoda_parse('http://big-moda.com/product-category/platya-bolshih-razmerov/'),
+    #                  bigmoda_parse('http://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
     #                  bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')]
     bigmoda_pages = [bigmoda_parse('http://localhost/product-category/platya-bolshih-razmerov/'),
                      bigmoda_parse('http://localhost/product-category/bluzki-bolshih-razmerov/'),
