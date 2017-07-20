@@ -639,6 +639,7 @@ def del_item(goods_data, wcapi_conn):
             else:
                 search_res = wcapi.get('products/?sku=%s' % (name[0])).json()
                 if list(search_res):
+                    search_res = search_res[0]
                     for attribute in search_res['attributes']:
                         if attribute['name'] == 'Размер':
                             for size in name[1]:
@@ -708,7 +709,7 @@ if __name__ == '__main__':
     consumer_secret = keys[1]
 
     wcapi = API(
-        url='http://big-moda.com',
+        url='http://localhost',
         consumer_key=consumer_key,
         consumer_secret=consumer_secret,
         wp_api=True,
