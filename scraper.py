@@ -503,7 +503,7 @@ def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc, wcapi_conn):
     return True
 
 
-def del_item(goods_data, wcapi_conn):
+def del_item(goods_data, bigmoda_pages, wcapi_conn):
     '''
     Check availability goods on Bigmoda and supplier
     :param goods_data: list
@@ -513,7 +513,7 @@ def del_item(goods_data, wcapi_conn):
     bm_names_dress = [i[0] for i in bigmoda_pages[0]]
     bm_names_blouse = [i[0] for i in bigmoda_pages[1]]
     bm_names_exc = [i[0] for i in bigmoda_pages[2]]
-
+    woo_items = _get_woo_items_id(wcapi_conn)
     for bm_dress in bigmoda_pages[0]:
         if bm_dress[0] not in names and bm_dress[0] not in bm_names_exc:
             for size, size_id in bm_dress[4].items():
@@ -636,43 +636,58 @@ def del_item(goods_data, wcapi_conn):
                             ],
                         }
                         wcapi_conn.post('products/%s/variations' % (product['id']), data)
+                with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
+                    file.write('Добавить карточку: {} {} {}\n'.format(name[0], name[1], name[2]))
             else:
-                search_res = wcapi_conn.get('products/?sku=%s' % (name[0])).json()
-                if list(search_res):
-                    try:
-                        search_res = search_res[0]
-                        for attribute in search_res['attributes']:
-                            if attribute['name'] == 'Размер':
-                                for size in name[1]:
-                                    data = {
-                                        'description': '',
-                                        'regular_price': str(name[2]),
-                                        'tax_status': 'taxable',
-                                        'tax_class': '',
-                                        'attributes': [
-                                            {
-                                                "id": 1,
-                                                "name": "Размер",
-                                                "option": size
-                                            }
-                                        ],
-                                    }
-                                    if size not in attribute['options']:
-                                        attribute['options'].append(size)
-                                        wcapi_conn.put('products/%s' % (search_res['id']), search_res)
-                                        wcapi_conn.post('products/%s/variations' % (search_res['id']), data)
-                                    else:
-                                        wcapi_conn.post('products/%s/variations' % (search_res['id']), data)
-                        wcapi_conn.put('products/%s' % (search_res['id']),
-                                        data={'status': 'publish', 'catalog_visibility': 'visible'})
-                    except KeyError:
-                        with open('errors.txt', 'a', encoding='utf-8') as err_file:
-                            err_file.write('Ошибка в карточке: %s \n' % (name[0]))
-                        continue
-            with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
-                file.write('Добавить карточку: {} {} {}\n'.format(name[0], name[1], name[2]))
+                for item in woo_items:
+                    if item[0] == name[0]:
+                        item_id = item[1]
+                        with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
+                            file.write('Добавить карточку: {} {} {}\n'.format(name[0], name[1], name[2]))
+                search_res = wcapi_conn.get('products/%s' % (item_id)).json()
+                try:
+                    for attribute in search_res['attributes']:
+                        if attribute['name'] == 'Размер':
+                            for size in name[1]:
+                                data = {
+                                    'description': '',
+                                    'regular_price': str(name[2]),
+                                    'tax_status': 'taxable',
+                                    'tax_class': '',
+                                    'attributes': [
+                                        {
+                                            "id": 1,
+                                            "name": "Размер",
+                                            "option": size
+                                        }
+                                    ],
+                                }
+                                if size not in attribute['options']:
+                                    attribute['options'].append(size)
+                                    wcapi_conn.put('products/%s' % (search_res['id']), search_res)
+                                    wcapi_conn.post('products/%s/variations' % (search_res['id']), data)
+                                else:
+                                    wcapi_conn.post('products/%s/variations' % (search_res['id']), data)
+                    wcapi_conn.put('products/%s' % (search_res['id']),
+                                    data={'status': 'publish', 'catalog_visibility': 'visible'})
+                except KeyError:
+                    with open('errors.txt', 'a', encoding='utf-8') as err_file:
+                        err_file.write('Ошибка при синхронизации: %s \n' % (name[0]))
+                    continue
+
     return goods_data
 
+def _get_woo_items_id(wcapi_conn):
+    result = list()
+    for page in range(1, 1000):
+        q = wcapi_conn.get('products/?page=%s' % (page)).json()
+        if list(q):
+            for item in q:
+                if item['id']:
+                    result.append([item['sku'], item['id']])
+        else:
+            break
+    return result
 
 def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█'):
     """
@@ -749,4 +764,4 @@ if __name__ == '__main__':
         compare_dress(site, bigmoda_pages[1], bigmoda_pages[2], wcapi)
         for blouse in site:
             goods_data.append(blouse)
-    del_item(goods_data, wcapi)
+    del_item(goods_data, bigmoda_pages, wcapi)
