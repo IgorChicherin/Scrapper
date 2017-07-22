@@ -642,38 +642,33 @@ def del_item(goods_data, bigmoda_pages, wcapi_conn):
                 for item in woo_items:
                     if item[0] == name[0]:
                         item_id = item[1]
+                        search_res = wcapi_conn.get('products/%s' % (item_id)).json()
                         with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
                             file.write('Добавить карточку: {} {} {}\n'.format(name[0], name[1], name[2]))
-                search_res = wcapi_conn.get('products/%s' % (item_id)).json()
-                try:
-                    for attribute in search_res['attributes']:
-                        if attribute['name'] == 'Размер':
-                            for size in name[1]:
-                                data = {
-                                    'description': '',
-                                    'regular_price': str(name[2]),
-                                    'tax_status': 'taxable',
-                                    'tax_class': '',
-                                    'attributes': [
-                                        {
-                                            "id": 1,
-                                            "name": "Размер",
-                                            "option": size
-                                        }
-                                    ],
-                                }
-                                if size not in attribute['options']:
-                                    attribute['options'].append(size)
-                                    wcapi_conn.put('products/%s' % (search_res['id']), search_res)
-                                    wcapi_conn.post('products/%s/variations' % (search_res['id']), data)
-                                else:
-                                    wcapi_conn.post('products/%s/variations' % (search_res['id']), data)
-                    wcapi_conn.put('products/%s' % (search_res['id']),
-                                    data={'status': 'publish', 'catalog_visibility': 'visible'})
-                except KeyError:
-                    with open('errors.txt', 'a', encoding='utf-8') as err_file:
-                        err_file.write('Ошибка при синхронизации: %s \n' % (name[0]))
-                    continue
+                        for attribute in search_res['attributes']:
+                            if attribute['name'] == 'Размер':
+                                for size in name[1]:
+                                    data = {
+                                        'description': '',
+                                        'regular_price': str(name[2]),
+                                        'tax_status': 'taxable',
+                                        'tax_class': '',
+                                        'attributes': [
+                                            {
+                                                "id": 1,
+                                                "name": "Размер",
+                                                "option": size
+                                            }
+                                        ],
+                                    }
+                                    if size not in attribute['options']:
+                                        attribute['options'].append(size)
+                                        wcapi_conn.put('products/%s' % (search_res['id']), search_res)
+                                        wcapi_conn.post('products/%s/variations' % (search_res['id']), data)
+                                    else:
+                                        wcapi_conn.post('products/%s/variations' % (search_res['id']), data)
+                        wcapi_conn.put('products/%s' % (search_res['id']),
+                                        data={'status': 'publish', 'catalog_visibility': 'visible'})
 
     return goods_data
 
@@ -687,6 +682,7 @@ def _get_woo_items_id(wcapi_conn):
                     result.append([item['sku'], item['id']])
         else:
             break
+        time.sleep(1)
     return result
 
 def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█'):
