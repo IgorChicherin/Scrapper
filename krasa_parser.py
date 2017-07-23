@@ -1,3 +1,6 @@
+import re
+import csv
+
 def krasa_parse(file_name):
     '''
     Parsing goods from krasa.csv
