@@ -3,7 +3,7 @@ import time
 
 def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc, wcapi_conn):
     '''
-    Compare avaliability sizes supplier and site customer
+    Compare avaliability sizes supplier and site customer, and add or delete sizes on site
     :param parse_list: list
     :param bigmoda_dresses: list
     :param bigmoda_exc: list
@@ -61,7 +61,7 @@ def compare_dress(parse_list, bigmoda_dresses, bigmoda_exc, wcapi_conn):
 
 def del_item(goods_data, bigmoda_pages, wcapi_conn):
     '''
-    Check availability goods on Bigmoda and supplier
+    Check availability goods on Bigmoda and supplier, then publish or delete goods
     :param goods_data: list
     :param wcapi_conn: woocommerce API object
     :return: list
