@@ -29,12 +29,12 @@ def main(wcapi):
                     primalinea_parse('http://primalinea.ru/catalog/category/43/all/0'),
                     avigal_parse('http://avigal.ru/blouse-tunic/'),
                     wisell_parse('http://wisell.ru/catalog/tuniki_bluzy/')]
-    # bigmoda_pages = [bigmoda_parse('http://big-moda.com/product-category/platya-bolshih-razmerov/'),
-    #                  bigmoda_parse('http://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
-    #                  bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')]
-    bigmoda_pages = [bigmoda_parse('http://localhost/product-category/platya-bolshih-razmerov/'),
-                     bigmoda_parse('http://localhost/product-category/bluzki-bolshih-razmerov/'),
-                     bigmoda_parse('http://localhost/product-category/rasprodazha-bolshie-razmery/')]
+    bigmoda_pages = [bigmoda_parse('http://big-moda.com/product-category/platya-bolshih-razmerov/'),
+                     bigmoda_parse('http://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
+                     bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')]
+    # bigmoda_pages = [bigmoda_parse('http://localhost/product-category/platya-bolshih-razmerov/'),
+    #                  bigmoda_parse('http://localhost/product-category/bluzki-bolshih-razmerov/'),
+    #                  bigmoda_parse('http://localhost/product-category/rasprodazha-bolshie-razmery/')]
 
     goods_data = list()
     for site in dress_pages:
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     consumer_secret = keys[1]
 
     wcapi = API(
-        url='http://localhost',
+        url='http://big-moda.com',
         consumer_key=consumer_key,
         consumer_secret=consumer_secret,
         wp_api=True,
