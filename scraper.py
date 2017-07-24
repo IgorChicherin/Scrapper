@@ -11,42 +11,69 @@ from bigmoda_spider import bigmoda_parse
 from woo_sync_db import compare_dress, del_item
 
 
-def main(wcapi):
+def main(wcapi, answer):
     '''
     Main module
     :param wcapi: woocommerce API object
+    :param answer: int
     :return: boolean
     '''
-    dress_pages = [novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/'),
-                   novita_parse('http://novita-nsk.ru/shop/aktsii/'),
-                   novita_parse('http://novita-nsk.ru/index.php?route=product/category&path=1_19'),
-                   novita_parse('http://novita-nsk.ru/shop/yubki/'),
-                   primalinea_parse('http://primalinea.ru/catalog/category/42/all/0'),
-                   avigal_parse('http://avigal.ru/dress/'),
-                   wisell_parse('http://wisell.ru/catalog/platya/'),
-                   krasa_parse('krasa.csv')]
-    blouse_pages = [novita_parse('http://novita-nsk.ru/shop/bluzy/'),
-                    primalinea_parse('http://primalinea.ru/catalog/category/43/all/0'),
-                    avigal_parse('http://avigal.ru/blouse-tunic/'),
-                    wisell_parse('http://wisell.ru/catalog/tuniki_bluzy/')]
-    bigmoda_pages = [bigmoda_parse('http://big-moda.com/product-category/platya-bolshih-razmerov/'),
-                     bigmoda_parse('http://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
-                     bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')]
-    # bigmoda_pages = [bigmoda_parse('http://localhost/product-category/platya-bolshih-razmerov/'),
-    #                  bigmoda_parse('http://localhost/product-category/bluzki-bolshih-razmerov/'),
-    #                  bigmoda_parse('http://localhost/product-category/rasprodazha-bolshie-razmery/')]
+
 
     goods_data = list()
-    for site in dress_pages:
-        compare_dress(site, bigmoda_pages[0], bigmoda_pages[1], wcapi)
-        for dress in site:
-            goods_data.append(dress)
-    for site in blouse_pages:
-        compare_dress(site, bigmoda_pages[1], bigmoda_pages[2], wcapi)
-        for blouse in site:
-            goods_data.append(blouse)
-    del_item(goods_data, bigmoda_pages, wcapi)
-    return True
+    if int(answer) == 1:
+        dress_pages = [novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/'),
+                       novita_parse('http://novita-nsk.ru/shop/aktsii/'),
+                       novita_parse('http://novita-nsk.ru/index.php?route=product/category&path=1_19'),
+                       novita_parse('http://novita-nsk.ru/shop/yubki/'),
+                       primalinea_parse('http://primalinea.ru/catalog/category/42/all/0'),
+                       avigal_parse('http://avigal.ru/dress/'),
+                       wisell_parse('http://wisell.ru/catalog/platya/'),
+                       krasa_parse('krasa.csv')]
+        blouse_pages = [novita_parse('http://novita-nsk.ru/shop/bluzy/'),
+                        primalinea_parse('http://primalinea.ru/catalog/category/43/all/0'),
+                        avigal_parse('http://avigal.ru/blouse-tunic/'),
+                        wisell_parse('http://wisell.ru/catalog/tuniki_bluzy/')]
+        bigmoda_pages = [bigmoda_parse('http://big-moda.com/product-category/platya-bolshih-razmerov/'),
+                         bigmoda_parse('http://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
+                         bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')]
+        # bigmoda_pages = [bigmoda_parse('http://localhost/product-category/platya-bolshih-razmerov/'),
+        #                  bigmoda_parse('http://localhost/product-category/bluzki-bolshih-razmerov/'),
+        #                  bigmoda_parse('http://localhost/product-category/rasprodazha-bolshie-razmery/')]
+        for site in dress_pages:
+            compare_dress(site, bigmoda_pages[0], bigmoda_pages[1], wcapi)
+        for site in blouse_pages:
+            compare_dress(site, bigmoda_pages[1], bigmoda_pages[2], wcapi)
+        return True
+    elif int(answer) == 2:
+        dress_pages = [novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/'),
+                       novita_parse('http://novita-nsk.ru/shop/aktsii/'),
+                       novita_parse('http://novita-nsk.ru/index.php?route=product/category&path=1_19'),
+                       novita_parse('http://novita-nsk.ru/shop/yubki/'),
+                       primalinea_parse('http://primalinea.ru/catalog/category/42/all/0'),
+                       avigal_parse('http://avigal.ru/dress/'),
+                       wisell_parse('http://wisell.ru/catalog/platya/'),
+                       krasa_parse('krasa.csv')]
+        blouse_pages = [novita_parse('http://novita-nsk.ru/shop/bluzy/'),
+                        primalinea_parse('http://primalinea.ru/catalog/category/43/all/0'),
+                        avigal_parse('http://avigal.ru/blouse-tunic/'),
+                        wisell_parse('http://wisell.ru/catalog/tuniki_bluzy/')]
+        bigmoda_pages = [bigmoda_parse('http://big-moda.com/product-category/platya-bolshih-razmerov/'),
+                         bigmoda_parse('http://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
+                         bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')]
+        # bigmoda_pages = [bigmoda_parse('http://localhost/product-category/platya-bolshih-razmerov/'),
+        #                  bigmoda_parse('http://localhost/product-category/bluzki-bolshih-razmerov/'),
+        #                  bigmoda_parse('http://localhost/product-category/rasprodazha-bolshie-razmery/')]
+        for site in dress_pages:
+            for dress in site:
+                goods_data.append(dress)
+        for site in blouse_pages:
+            for blouse in site:
+                goods_data.append(blouse)
+        del_item(goods_data, bigmoda_pages, wcapi)
+        return True
+    else:
+        return False
 
 
 if __name__ == '__main__':
@@ -69,5 +96,6 @@ if __name__ == '__main__':
         wp_api=True,
         version="wc/v2",
     )
+    answ = input(' [1] - Синхронизировать размеры \n [2] - Добавить новинки \n Введите ответ: ')
+    main(wcapi, answer=answ)
 
-    main(wcapi)

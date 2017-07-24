@@ -55,7 +55,7 @@ def avigal_parse(url):
                 data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
                 data['price'] = int(data['price'].group(0)) * 2
                 # if data['price'] > 2500:
-                data['type'] = soup.find('h1').text.strip()
+                data['type'] = soup.find('div', attrs={'class': 'product-info'}).find('h1').text.strip()
                 data['name'] = soup.find('span', attrs={'itemprop': 'model'})
                 data['name'] = data['name'].text
                 sizes_list = soup.find_all('label', {'class': 'optid-13'})
