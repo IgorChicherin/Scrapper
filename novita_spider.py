@@ -70,7 +70,7 @@ def novita_parse(url):
                 if (data['type'] == 'Блузка' or data['type'] == 'Туника') and int(data['price']) < 2300:
                     data['price'] = '2300'
                 elif data['type'] == 'Платье' and int(data['price']) < 2500:
-                data['price'] = '2500'
+                    data['price'] = '2500'
                 color_size_tags = _create_sizes_dict(data['color_list'], data['sizes_list'], data['sizes_accepted'])
                 for key, value in color_size_tags.items():
                     for item in range(len(value)):
