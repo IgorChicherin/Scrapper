@@ -2,6 +2,7 @@ import time
 import re
 
 import requests
+import progressbar
 from bs4 import BeautifulSoup
 
 from progress_bar import printProgressBar
@@ -32,8 +33,16 @@ def bigmoda_parse(url):
         data['item_links'] = [item.get('href') for item in data['item_links']]
         i = 0
         l = len(data['item_links'])
-        printProgressBar(i, l, prefix='Bigmoda Parsing:',
-                         suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+        bar = progressbar.ProgressBar(
+            maxval=l,
+            widgets=[
+                'Bigmoda Parsing: ',
+                progressbar.Bar(left='|', marker='█', right='|'),
+                progressbar.Percentage(),
+                ' [%s of %s] Complete ' % (j, len(data['paginaton_url'])),
+                progressbar.AdaptiveETA()
+            ]
+        )
         for item in data['item_links']:
             r = requests.get(item)
             soup = BeautifulSoup(r.text, 'lxml')
@@ -58,12 +67,10 @@ def bigmoda_parse(url):
                 with open('errors.txt', 'a', encoding='utf-8') as err_file:
                     err_file.write('Ошибка в карточке: %s \n' % (item))
                 i += 1
-                printProgressBar(i, l, prefix='Bigmoda Parsing:',
-                                 suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+                bar.update(i)
                 continue
             time.sleep(0.1)
             i += 1
-            printProgressBar(i, l, prefix='Bigmoda Parsing:',
-                             suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+            bar.update(i)
         j += 1
     return result

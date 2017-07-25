@@ -2,9 +2,8 @@ import time
 import re
 
 import requests
+import progressbar
 from bs4 import BeautifulSoup
-
-from progress_bar import printProgressBar
 
 
 def _create_sizes_dict(color_list, sizes_list, sizes_accepted):
@@ -39,7 +38,11 @@ def novita_parse(url):
     result = list()
     i = 0
     l = len(items_link_list)
-    printProgressBar(i, l, prefix='Progress:', suffix='Complete', length=50)
+    bar = progressbar.ProgressBar(max_value=len(items_link_list),
+                                  widgets=['Novita Parsing: ',
+                                           progressbar.Bar(left='|', marker='█', right='|'),
+                                           progressbar.Percentage(), ' ',
+                                           progressbar.AdaptiveETA()])
     for link in items_link_list:
         url = link.find('a').get('href')
         r = requests.get(url)
@@ -85,9 +88,9 @@ def novita_parse(url):
             with open('errors.txt', 'a', encoding='utf-8') as err_file:
                 err_file.write('Ошибка в карточке: %s \n' % (link))
             i += 1
-            printProgressBar(i, l, prefix='Novita Parsing:', suffix='Complete', length=50)
+            bar.update(i)
             continue
         time.sleep(0.1)
         i += 1
-        printProgressBar(i, l, prefix='Novita Parsing:', suffix='Complete', length=50)
+        bar.update(i)
     return result

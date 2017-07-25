@@ -2,6 +2,7 @@ import time
 import re
 
 import requests
+import progressbar
 from bs4 import BeautifulSoup
 
 from progress_bar import printProgressBar
@@ -52,8 +53,16 @@ def wisell_parse(url):
         data['item_links'] = ['https://wisell.ru' + link.get('href') for link in data['item_links']]
         i = 0
         l = len(data['item_links'])
-        printProgressBar(i, l, prefix='Progress:',
-                         suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+        bar = progressbar.ProgressBar(
+            maxval=l,
+            widgets=[
+                'Wisell Parsing: ',
+                progressbar.Bar(left='|', marker='█', right='|'),
+                progressbar.Percentage(),
+                ' [%s of %s] Complete ' % (j, len(data['paginaton_url'])),
+                progressbar.AdaptiveETA()
+            ]
+        )
         for item_link in data['item_links']:
             r = requests.get(item_link, headers=headers)
             soup = BeautifulSoup(r.text, 'lxml')
@@ -65,16 +74,16 @@ def wisell_parse(url):
                     with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
                         file.write('Нет в наличии на сайте Wisell: {}\n'.format(data['name']))
                         i += 1
-                        printProgressBar(i, l, prefix='Wisell Parsing:',
-                                         suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+                        bar.update(i)
                     continue
                 data['price'] = soup.find('span', attrs={'class': 'price_val'})
                 data['price'] = re.search(r'(\d+)', data['price'].text.strip().replace(' ', ''))
                 data['price'] = int(data['price'].group(0))
                 if data['price'] < 1800:
                     i += 1
-                    printProgressBar(i, l, prefix='Wisell Parsing:',
-                                     suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+                    # printProgressBar(i, l, prefix='Wisell Parsing:',
+                    #                  suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+                    bar.update(i)
                     continue
                 data['sizes_list'] = soup.find_all('ul', {'class': 'size_list'})
                 data['sizes_list'] = data['sizes_list'][0].find_all('li', {'class': 'check_item'})
@@ -92,9 +101,7 @@ def wisell_parse(url):
                             with open('добавить удалить карточки.txt', 'a', encoding='utf-8') as file:
                                 file.write('Не прошла синхронизация на сайте Wisell: {}\n'.format(small_name.span.text))
                                 i += 1
-                                printProgressBar(i, l, prefix='Wisell Parsing:',
-                                                 suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])),
-                                                 length=50)
+                                bar.update(i)
                             continue
                         data['name'] = data['name'] + ' ' + small_name.span.text
                         small_sizes_list = soup.find_all('ul', {'class': 'size_list'})
@@ -127,7 +134,6 @@ def wisell_parse(url):
                 continue
             time.sleep(0.1)
             i += 1
-            printProgressBar(i, l, prefix='Wisell Parsing:',
-                             suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+            bar.update(i)
         j += 1
     return result

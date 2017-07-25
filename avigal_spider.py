@@ -2,9 +2,9 @@ import time
 import re
 
 import requests
-from bs4 import BeautifulSoup
-
+import progressbar
 from progress_bar import printProgressBar
+from bs4 import BeautifulSoup
 
 
 def avigal_parse(url):
@@ -45,8 +45,17 @@ def avigal_parse(url):
         items_link_list = [item.find('div', attrs={'class': 'name'}).a.get('href') for item in items_link_list]
         i = 0
         l = len(items_link_list)
-        printProgressBar(i, l, prefix='Avigal Parsing:',
-                         suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+        bar = progressbar.ProgressBar(
+            maxval=l,
+            widgets=[
+                'Avigal Parsing: ',
+                progressbar.Bar(left='|', marker='█', right='|'),
+                progressbar.Percentage(),
+                ' [%s of %s] Complete ' % (j, len(data['paginaton_url'])),
+                progressbar.AdaptiveETA()
+            ]
+        )
+        # Прогресс
         for link in items_link_list:
             r = session.get(link)
             soup = BeautifulSoup(r.text, 'lxml')
@@ -70,12 +79,10 @@ def avigal_parse(url):
                 with open('errors.txt', 'a', encoding='utf-8') as err_file:
                     err_file.write('Ошибка в карточке: %s \n' % (link))
                 i += 1
-                printProgressBar(i, l, prefix='Avigal Parsing:',
-                                 suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+                bar.update(i)
                 continue
             time.sleep(0.1)
             i += 1
-            printProgressBar(i, l, prefix='Avigal Parsing:',
-                             suffix='[{} of {}] Complete '.format(j, len(data['paginaton_url'])), length=50)
+            bar.update(i)
         j += 1
     return result
