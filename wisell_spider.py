@@ -5,8 +5,6 @@ import requests
 import progressbar
 from bs4 import BeautifulSoup
 
-from progress_bar import printProgressBar
-
 
 def wisell_parse(url):
     '''

@@ -19,7 +19,6 @@ def main(wcapi, answer):
     :return: boolean
     '''
 
-
     goods_data = list()
     if int(answer) == 1:
         dress_pages = [novita_parse('http://novita-nsk.ru/shop/zhenskie-platja-optom/'),
@@ -98,4 +97,3 @@ if __name__ == '__main__':
     )
     answ = input('[1] - Синхронизировать размеры \n[2] - Добавить новинки \nВведите ответ: ')
     main(wcapi, answer=answ)
-

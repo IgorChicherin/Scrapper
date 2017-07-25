@@ -3,7 +3,6 @@ import re
 
 import requests
 import progressbar
-from progress_bar import printProgressBar
 from bs4 import BeautifulSoup
 
 
