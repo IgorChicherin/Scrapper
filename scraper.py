@@ -60,9 +60,6 @@ def main(wcapi, answer):
         bigmoda_pages = [bigmoda_parse('http://big-moda.com/product-category/platya-bolshih-razmerov/'),
                          bigmoda_parse('http://big-moda.com/product-category/bluzki-bolshih-razmerov/'),
                          bigmoda_parse('http://big-moda.com/product-category/rasprodazha-bolshie-razmery/')]
-        # bigmoda_pages = [bigmoda_parse('http://localhost/product-category/platya-bolshih-razmerov/'),
-        #                  bigmoda_parse('http://localhost/product-category/bluzki-bolshih-razmerov/'),
-        #                  bigmoda_parse('http://localhost/product-category/rasprodazha-bolshie-razmery/')]
         for site in dress_pages:
             for dress in site:
                 goods_data.append(dress)
